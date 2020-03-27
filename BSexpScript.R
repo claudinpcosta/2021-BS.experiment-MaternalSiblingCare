@@ -1,6 +1,30 @@
 ##############################BS Experiment Summer 2019#######################################
 
-#Set Working Directory (in my case, dropbox)
+#Set Working Directory
+
+#loading dataset
+completeDataset <- read.csv("completeDataset.csv", header = T)
+
+  #checking dataset
+dim(completeDataset)
+head(completeDataset)
+tail(completeDataset)
+
+  #to access any variables of dataset
+attach(completeDataset)
+
+  #get only bees from 1st brood 
+summary(Brood)
+data.BS <- completeDataset[which(Brood == '1stBrood'),]
+dim(data.BS)
+head(data.BS)
+tail(data.BS)
+
+  #order dataset by treatment group and QueenID
+data.BS <- data.BS[with(data.BS, order(Treatment, QueenID)),]
+dim(data.BS)
+head(data.BS)
+tail(data.BS)
 
 #Body Size Histrogram 
 bodysize <- read.csv("bodysize.csv", header = T)
