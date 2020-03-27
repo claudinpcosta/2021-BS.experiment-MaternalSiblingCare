@@ -1,6 +1,6 @@
 ##############################BS Experiment Summer 2019#######################################
 
-#Set Working Directory  
+#Set Working Directory (in my case, dropbox)
 
 #Body Size Histrogram 
 bodysize <- read.csv("bodysize.csv", header = T)
