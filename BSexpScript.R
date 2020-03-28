@@ -1,59 +1,70 @@
 ##############################BS Experiment Summer 2019#######################################
 
-#Set Working Directory
+###Set Working Directory
 
-#loading dataset
+####all packages used here####
+library(plyr)
+library(ggplot2) #Makes pretty graphs
+library(lme4) #Runs linear mixed effect models
+library(multcomp) #Posthoc analyses
+library(car)
+library(AICcmodavg)
+library(lmtest)
+
+####loading dataset####
 completeDataset <- read.csv("completeDataset.csv", header = T)
 
   #checking dataset
 dim(completeDataset)
 head(completeDataset)
 tail(completeDataset)
+summary(completeDataset)
+attach(completeDataset) #to access any variables of dataset
 
-  #to access any variables of dataset
-attach(completeDataset)
+#excluding males
+summary(Time.development.days)
+femData <- completeDataset[-which(Time.development.days == 'male'),]
+dim(femData)
+head(femData)
+tail(femData)
+attach(femData)
 
   #get only bees from 1st brood 
 summary(Brood)
-data.BS <- completeDataset[which(Brood == '1stBrood'),]
+data.BS <- femData[which(Brood == '1stBrood'),]
 dim(data.BS)
 head(data.BS)
 tail(data.BS)
+summary(data.BS)
+attach(data.BS)
 
   #order dataset by treatment group and QueenID
 data.BS <- data.BS[with(data.BS, order(Treatment, QueenID)),]
 dim(data.BS)
 head(data.BS)
 tail(data.BS)
+summary(data.BS)
 
-#Body Size Histrogram 
-bodysize <- read.csv("bodysize.csv", header = T)
-head(bodysize)
+####Body Size analysism####
+summary(Avg.mm)
+
+  #excluding NA values 
+bodysize <- data.BS[-which(is.na(Avg.mm)),]
 dim(bodysize)
+head(bodysize)
+tail(bodysize)
 
-#test t Body Size versus group.reared
-testBSxGroup <- t.test(Wings ~ Group, bodysize)
-testBSxGroup
+  #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
+testBSxTreat
 
-library(plyr)
-mu <- ddply(bodysize, "Group", summarise, grp.mean=mean(Wings))
+mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
 head(mu)
 
-# queen.reared <- subset(bodysize, Group == "queen.reared")
-# summary(queen.reared)
-# QReared <- data.frame(queen.reared)
-# head(QReared)
-# 
-# worker.reared <- subset(bodysize, Group == "worker.reared")
-# summary(worker.reared)
-# WReared <- data.frame(worker.reared)
-# head(WReared)
-
-library(ggplot2)
-
-h<-ggplot(bodysize, aes(x=Wings, fill=Group, color=Group)) +
+  #histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+h<-ggplot(bodysize, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.1)
-h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Group),
+h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Treatment),
                     linetype="dashed") # Add mean lines
 h <- h + labs(x = "Maginal cell length (mm)", y = "Count", title = "Body size")
 h <- h + theme(legend.title = element_blank()) + theme(legend.position = "right")
@@ -61,15 +72,17 @@ h <- h + theme_classic()
 h <- h + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 h
 
+####Development time analysism#### (stopping here)
+summary(Time.development.days)
 
-# d<-ggplot(bodysize, aes(x=Wings, color=Group)) +
-#   geom_histogram(aes(y=..density.., fill=Group), position="identity", alpha = 0.3, binwidth = 0.1) +
-#   geom_density(size = 1) 
-# d <- d 
-# d <- d + labs(x = "Maginal celll length (mm)", y = "Count", title = "Body size")
-# d <- d + theme(legend.title = element_blank()) + theme(legend.position = "right")
-# d <- d + theme_classic() + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-# d
+  #excluding NA values 
+devtime <- data.BS[-which(is.na(Time.development.days)),]
+
+devtime <- na.omit(data.BS$Time.development.days)
+
+dim(devtime)
+head(devtime)
+tail(devtime)
 
 
 #Development Time Histrogram 
