@@ -5,6 +5,7 @@
 ####all packages used here####
 library(plyr)
 library(ggplot2) #Makes pretty graphs
+library(ggpubr) #Makes graphs
 library(lme4) #Runs linear mixed effect models
 library(multcomp) #Posthoc analyses
 library(car)
@@ -14,24 +15,24 @@ library(lmtest)
 ####loading dataset####
 completeDataset <- read.csv("completeDataset.csv", header = T)
 
-  #checking dataset
+#checking dataset
 dim(completeDataset)
 head(completeDataset)
 tail(completeDataset)
 summary(completeDataset)
 attach(completeDataset) #to access any variables of dataset
 
-  #excluding males
-summary(Time.development.days)
-femData <- completeDataset[-which(Time.development.days == 'male'),]
+#excluding males
+summary(comments)
+femData <- completeDataset[-which(comments == 'male'),]
 dim(femData)
 head(femData)
 tail(femData)
 summary(femData)
 attach(femData)
-summary(Time.development.days)
+summary(comments)
 
-  #get only bees from 1st brood 
+#get only bees from 1st brood 
 summary(Brood)
 data.BS <- femData[which(Brood == '1stBrood'),]
 dim(data.BS)
@@ -41,18 +42,17 @@ summary(data.BS)
 attach(data.BS)
 summary(Brood)
 
-  #order dataset by treatment group and QueenID
+#order dataset by treatment group and QueenID
 data.BS <- data.BS[with(data.BS, order(Treatment, QueenID)),]
 dim(data.BS)
 head(data.BS)
 tail(data.BS)
 summary(data.BS)
 
-
 ####Body Size analysism####
 summary(Avg.mm)
 
-  #excluding NA values 
+#excluding NA values 
 bodysize <- subset(data.BS, !is.na(Avg.mm))
 dim(bodysize)
 head(bodysize)
@@ -60,14 +60,14 @@ tail(bodysize)
 attach(bodysize)
 summary(Avg.mm)
 
-  #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+#test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
 testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
 testBSxTreat
 
 mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
 head(mu)
 
-  #histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+#histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
 h<-ggplot(bodysize, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.1)
 h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Treatment),
@@ -78,94 +78,79 @@ h <- h + theme_classic()
 h <- h + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 h
 
-####Development time analysism#### (stopping here)
-
+####Development time analysis####
 summary(Time.development.days)
 
-  #excluding NA values 
-devtime <- data.BS[-which(is.na(Time.development.days)),]
-
-devtime <- na.omit(data.BS$Time.development.days)
-
+#excluding missing values
+devtime <- subset(data.BS, !is.na(Time.development.days))
 dim(devtime)
 head(devtime)
 tail(devtime)
-
-
-#Development Time Histrogram 
-devtime <- read.csv("developmentdays.csv", header = T)
-head(devtime)
-dim(devtime)
+summary(devtime)
+attach(devtime)
+summary(Time.development.days)
 
 #test t Body Size versus group.reared
-testDTxGroup <- t.test(Age ~ Group, devtime)
-testDTxGroup
+testDTxTreat <- t.test(Time.development.days ~ Treatment, devtime)
+testDTxTreat
 
-mi <- ddply(devtime, "Group", summarise, grp.mean=mean(Age))
+mi <- ddply(devtime, "Treatment", summarise, grp.mean=mean(Time.development.days))
 head(mi)
 
-t<-ggplot(devtime, aes(x=Age, fill=Group, color=Group)) +
+#histograma Developmental time versus Treatment (queen vs worker reared)
+t<-ggplot(devtime, aes(x=Time.development.days, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 1)
-t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Group),
+t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Treatment),
                     linetype="dashed") # Add mean lines
-t <- t + labs(x = "Development time (Days)", y = "Count", title = "Development time")
+t <- t + labs(x = "Developmental time (Days)", y = "Count", title = "Developmental time")
 t <- t + theme(legend.title = element_blank()) + theme(legend.position = "right")
 t <- t + theme_classic()
 t <- t + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 t
 
+####Correlation Developmental Time X Body Size####
 
-#Correlation Time X Body Size 
-bodytime <- read.csv("correlation.csv", header = T)
+#excluding NA values 
+bodytime <- subset(data.BS, !is.na(Avg.mm) & !is.na(Time.development.days))
 head(bodytime)
 dim(bodytime)
+summary(bodytime)
+attach(bodytime)
 
 #correlation ggpubr
-if(!require(devtools)) install.packages("devtools")
-devtools::install_github("kassambara/ggpubr")
-
-library("ggpubr")
-
-ggscatter(bodytime, x = "Age", y = "Wings",
+ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
           xlab = "Development time (Days)", ylab = "Maginal celll length (mm)")
 
 
-c <- ggscatter(bodytime, x = "Wings", y = "Age", color = "Group",
-               palette = "Set1",     
-               add = "reg.line", conf.int = TRUE,
-               cor.method = "spearman",
-               xlab = "Maginal cell length (mm)", ylab = "Development time (Days)", title = "Body size versus Development time")
+c <- ggplot(bodytime, aes(x = Time.development.days, y = Avg.mm))
+c <- c + geom_point(aes(color = Treatment)) +
+  geom_smooth(aes(color = Treatment, fill = Treatment), method = lm) +
+  scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
+c <- c + labs(x = "Developmental time (Days)", y = "Maginal cell length (mm)", title = "Developmental time versus Body size")
 c <- c + theme(legend.title = element_blank()) + theme(legend.position = "right")
+c <- c + theme_classic()
+c <- c + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 c
 
-# c <- ggplot(bodytime, aes(x = Days, y = Wings))
-# c <- c + geom_point(aes(color = Group)) +
-#   geom_smooth(aes(color = Group, fill = Group), method = lm) +
-#   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-# c <- c + labs(x = "Development time (Days)", y = "Count")
-# c <- c + theme(legend.title = element_blank()) + theme(legend.position = "right")
-# c <- c + theme_classic()
-# c <- c + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-# c
+#Figures
+figureA <- ggarrange(h,t,c,
+                     ncol = 2, nrow = 2 )
+figureA
 
-#################################################################################################
-figure_body <- ggarrange(h,t,c,
-                         ncol = 2, nrow = 2 )
-figure_body
+####Sucrose graphics####
+summary(Sucrose.summary)
 
-
-#################################################################################################
-
-
-#Sucrose Histogram 
-sucrose <- read.csv("sucrose.csv", header = T)
-head(sucrose)
+#Sucrose data 
+sucrose <- bodytime[-which(Sucrose.summary == ""),]
 dim(sucrose)
+head(sucrose)
+tail(sucrose)
 summary(sucrose)
 
-s<- ggplot(sucrose, aes(x=Response, fill=Group, color=Group)) +
+#different options of graphics for sucrose assay 
+s<- ggplot(sucrose, aes(x=Sucrose.summary, fill=Treatment, color=Treatment)) +
   geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
 s <- s + labs(x = "Assay Response (Sucrose)", y = "Count", title = "Sucrose response versus Group reared")
 s <- s + theme(legend.title = element_blank()) + theme(legend.position = "right")
@@ -173,129 +158,94 @@ s <- s + theme_classic()
 s <- s + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 s
 
-
-s1<- ggplot(sucrose, aes(x=Conc, fill=Group, color=Group)) +
-  geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
-s1 <- s1 + labs(x = "Sucrose Response (Concentration)", y = "Count", title = "Sucrose response (Concentration) versus Group reared")
+s1 <- ggplot(sucrose,aes(x = Treatment,fill = Sucrose.summary)) + 
+  geom_bar(position = "fill")+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
+s1 <- s1 + labs(x = "Treatment", title = "Sucrose response", fill = "Sucrose response")
 s1 <- s1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s1 <- s1 + theme_classic()
-s1 <- s1 + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
+s1 <- s1 + scale_fill_brewer(palette = "Dark2") + scale_color_brewer(palette = "Dark2")
 s1
 
-
-s2 <- ggplot(sucrose, aes(x=Conc, y=Wings, fill=Group, color=Group)) + 
-  geom_count(alpha = 0.6)
-s2 <- s2 + labs(x = "Sucrose Response (Concentration)", y = "Maginal celll length (mm)", title = "Sucrose response versus Body size")
+s2 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
+  geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
+s2 <- s2 + labs(x = "Sucrose Response (Concentration)", y = "Count", title = "Sucrose response (Concentration) versus Group reared")
 s2 <- s2 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s2 <- s2 + theme_classic()
 s2 <- s2 + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 s2
 
-
-s3 <- ggplot(sucrose, aes(x=Conc, y=Wings)) + 
-  geom_count()
-s3 <- s3 + labs(x = "Sucrose Response (Concentration)", y = "Maginal celll length (mm)", title = "Sucrose response versus Body size")
+s3 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
+  geom_bar(position = "fill", alpha = 0.5)+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
+s3 <- s3 + labs(x = "Sucrose Response (Concentration)", title = "Sucrose response (Concentration) versus Group reared")
 s3 <- s3 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s3 <- s3 + theme_classic()
 s3 <- s3 + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 s3
 
-
-s4 <- ggplot(sucrose, aes(x=Conc, y=Wings, fill=Group, color=Group)) + 
-  geom_point(alpha = 0.6, position = "jitter")
-s4 <- s4 + labs(x = "Sucrose Response (Concentration)", y = "Maginal cell length (mm)", title = "Sucrose response versus Body size")
+s4 <-ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
+  geom_histogram(position="identity", alpha = 0.5, binwidth = 0.05)
+s4 <- s4 + labs(x = "Sucrose Response (Concentration)", title = "Sucrose response (Concentration) versus Group reared")
 s4 <- s4 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s4 <- s4 + theme_classic()
 s4 <- s4 + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 s4
 
-
-
-s5 <- ggplot(sucrose,aes(x = Group,fill = Response)) + 
-  geom_bar(position = "fill")+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
-s5 <- s5 + labs(x = "Treatment", title = "Sucrose response")
+s5 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatment)) + 
+  geom_point(alpha = 0.6, position = "jitter")
+s5 <- s5 + labs(x = "Sucrose Response (Concentration)", y = "Maginal cell length (mm)", title = "Sucrose response versus Body size")
 s5 <- s5 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s5 <- s5 + theme_classic()
-s5 <- s5 + scale_fill_brewer(palette = "Dark2") + scale_color_brewer(palette = "Dark2")
+s5 <- s5 + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 s5
 
+####Learning graphics####
+summary(LearningTraining.summary)
+summary(LearningTest.summary)
 
+#Learning data 
+learningTraining <- bodytime[-which(LearningTraining.summary == ""),]
+dim(learningTraining)
+head(learningTraining)
+tail(learningTraining)
+summary(learningTraining)
 
-#concentration
+learningTest <- bodytime[-which(LearningTest.summary == ""),]
+dim(learningTest)
+head(learningTest)
+tail(learningTest)
+summary(learningTest)
 
-sucroseCon <- read.csv("sucroseCon.csv", header = T)
-head(sucroseCon)
-dim(sucroseCon)
-summary(sucroseCon)
+#different options of graphics for learning assay 
 
-
-s6 <-ggplot(sucroseCon, aes(x=Sucrose.conc, fill=Treatment)) +
-  geom_histogram(position="identity", alpha = 0.5, binwidth = 0.05)
-s6 <- s6 + labs(x = "Sucrose concentration", y = "Count", title = "Sucrose response versus Sucrose concentration")
-s6 <- s6 + theme(legend.title = element_blank()) + theme(legend.position = "right")
-s6 <- s6 + theme_classic()
-s6 <- s6 + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-s6
-
-
-
-#################################################################################################
-
-figure_sucrose <- ggarrange(s, s1, s2, s3, s4,
-                            ncol = 2, nrow = 3 )
-figure_sucrose
-
-#################################################################################################
-
-#Learning
-learning <- read.csv("Learning.csv", header = T)
-head(learning)
-dim(learning)
-summary(learning)
-
-l <- ggplot(learning,aes(x = Group,fill = LearningTraining)) + 
+l <- ggplot(learningTraining,aes(x = Treatment,fill = LearningTraining.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Trained")
-l <- l + labs(x = "Treatment", title = "Learning training")
+l <- l + labs(x = "Treatment", title = "Learning training", fill = "Learning training")
 l <- l + theme(legend.title = element_blank()) + theme(legend.position = "right")
 l <- l + theme_classic()
 l <- l + scale_fill_brewer(palette = "Dark2") + scale_color_brewer(palette = "Dark2")
 l
 
-
-l1 <- ggplot(learning,aes(x = Group,fill = LearningTest)) + 
+l1 <- ggplot(learningTest,aes(x = Treatment,fill = LearningTest.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Successful")
-l1 <- l1 + labs(x = "Treatment", title = "Learning successful")
+l1 <- l1 + labs(x = "Treatment", title = "Learning successful", fill = "Learning test")
 l1 <- l1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 l1 <- l1 + theme_classic()
 l1 <- l1 + scale_fill_brewer(palette = "Dark2") + scale_color_brewer(palette = "Dark2")
 l1
 
-learningNu <- read.csv("LearningNumber.csv", header = T)
-head(learningNu)
-dim(learningNu)
-summary(learningNu)
 
-c1 <- ggplot(learningNu, aes(x=LearningTraining, y=Wings, color = Group, fill = Group))+
-  geom_point(aes(color = Group))+
-  geom_smooth(aes(color = Group, fill = Group), method = lm)+
-  labs(x = "Maginal cell length (mm)", y = "Maginal cell length (mm)", title = "Learning successful versus Body size") +
-  scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")+
-  theme_classic()+
-  theme(legend.title = element_blank()) + theme(legend.position = "right")
-c1
+####Survival graphics####
+summary(Survival.hours)
 
-
-
-#################################################################################################
-
-#Survival
-survival <- read.csv("survival.csv", header = T)
+#Survival data 
+survival <- subset(bodytime, !is.na(Survival.hours))
 head(survival)
 dim(survival)
-summary(survival)
+summary(survival$Survival.hours)
+
 
 #test t survival versus group.reared
-testSxGroup <- t.test(Survival ~ Group, survival)
+testSxGroup <- t.test(Survival.hours ~ Treatment, survival)
 testSxGroup
 
 
