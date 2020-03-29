@@ -21,13 +21,15 @@ tail(completeDataset)
 summary(completeDataset)
 attach(completeDataset) #to access any variables of dataset
 
-#excluding males
+  #excluding males
 summary(Time.development.days)
 femData <- completeDataset[-which(Time.development.days == 'male'),]
 dim(femData)
 head(femData)
 tail(femData)
+summary(femData)
 attach(femData)
+summary(Time.development.days)
 
   #get only bees from 1st brood 
 summary(Brood)
@@ -37,6 +39,7 @@ head(data.BS)
 tail(data.BS)
 summary(data.BS)
 attach(data.BS)
+summary(Brood)
 
   #order dataset by treatment group and QueenID
 data.BS <- data.BS[with(data.BS, order(Treatment, QueenID)),]
@@ -50,26 +53,12 @@ summary(data.BS)
 summary(Avg.mm)
 
   #excluding NA values 
-bodysize <- data.BS[-which(is.na(Avg.mm)),]
+bodysize <- subset(data.BS, !is.na(Avg.mm))
 dim(bodysize)
 head(bodysize)
 tail(bodysize)
-
-  #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
-testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
-testBSxTreat
-
-mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
-head(mu)
-
-
-####Body Size analysism####
-
-  #excluding NA values 
-bodysize <- data.BS[-which(is.na(Avg.mm)),]
-dim(bodysize)
-head(bodysize)
-tail(bodysize)
+attach(bodysize)
+summary(Avg.mm)
 
   #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
 testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
