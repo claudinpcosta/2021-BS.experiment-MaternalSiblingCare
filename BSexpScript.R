@@ -5,6 +5,7 @@
 ####all packages used here####
 library(plyr)
 library(ggplot2) #Makes pretty graphs
+library(ggpubr) #Makes graphs
 library(lme4) #Runs linear mixed effect models
 library(multcomp) #Posthoc analyses
 library(car)
@@ -22,14 +23,14 @@ summary(completeDataset)
 attach(completeDataset) #to access any variables of dataset
 
   #excluding males
-summary(Time.development.days)
-femData <- completeDataset[-which(Time.development.days == 'male'),]
+summary(comments)
+femData <- completeDataset[-which(comments == 'male'),]
 dim(femData)
 head(femData)
 tail(femData)
 summary(femData)
 attach(femData)
-summary(Time.development.days)
+summary(comments)
 
   #get only bees from 1st brood 
 summary(Brood)
@@ -47,7 +48,6 @@ dim(data.BS)
 head(data.BS)
 tail(data.BS)
 summary(data.BS)
-
 
 ####Body Size analysism####
 summary(Avg.mm)
@@ -78,67 +78,62 @@ h <- h + theme_classic()
 h <- h + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 h
 
-####Development time analysism#### (stopping here)
-
+####Development time analysism####
 summary(Time.development.days)
 
-  #excluding NA values 
-devtime <- data.BS[-which(is.na(Time.development.days)),]
-
-devtime <- na.omit(data.BS$Time.development.days)
-
+  #excluding missing values
+devtime <- subset(data.BS, !is.na(Time.development.days))
 dim(devtime)
 head(devtime)
 tail(devtime)
+summary(devtime)
+attach(devtime)
+summary(Time.development.days)
 
+  #test t Body Size versus group.reared
+testDTxTreat <- t.test(Time.development.days ~ Treatment, devtime)
+testDTxTreat
 
-#Development Time Histrogram 
-devtime <- read.csv("developmentdays.csv", header = T)
-head(devtime)
-dim(devtime)
-
-#test t Body Size versus group.reared
-testDTxGroup <- t.test(Age ~ Group, devtime)
-testDTxGroup
-
-mi <- ddply(devtime, "Group", summarise, grp.mean=mean(Age))
+mi <- ddply(devtime, "Treatment", summarise, grp.mean=mean(Time.development.days))
 head(mi)
 
-t<-ggplot(devtime, aes(x=Age, fill=Group, color=Group)) +
+  #histograma Developmental time versus Treatment (queen vs worker reared)
+t<-ggplot(devtime, aes(x=Time.development.days, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 1)
-t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Group),
+t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Treatment),
                     linetype="dashed") # Add mean lines
-t <- t + labs(x = "Development time (Days)", y = "Count", title = "Development time")
+t <- t + labs(x = "Developmental time (Days)", y = "Count", title = "Developmental time")
 t <- t + theme(legend.title = element_blank()) + theme(legend.position = "right")
 t <- t + theme_classic()
 t <- t + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 t
 
+####Correlation Developmental Time X Body Size####
 
-#Correlation Time X Body Size 
-bodytime <- read.csv("correlation.csv", header = T)
+  #excluding NA values 
+bodytime <- subset(data.BS, !is.na(Avg.mm) & !is.na(Time.development.days))
 head(bodytime)
 dim(bodytime)
+summary(bodytime)
 
-#correlation ggpubr
-if(!require(devtools)) install.packages("devtools")
-devtools::install_github("kassambara/ggpubr")
+  #correlation ggpubr
 
-library("ggpubr")
-
-ggscatter(bodytime, x = "Age", y = "Wings",
+ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
           xlab = "Development time (Days)", ylab = "Maginal celll length (mm)")
 
 
-c <- ggscatter(bodytime, x = "Wings", y = "Age", color = "Group",
+c <- ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm", color = "Treatment",
                palette = "Set1",     
                add = "reg.line", conf.int = TRUE,
                cor.method = "spearman",
-               xlab = "Maginal cell length (mm)", ylab = "Development time (Days)", title = "Body size versus Development time")
+               xlab = "Maginal cell length (mm)", ylab = "Developmental time (Days)", title = "Body size versus Development time")
 c <- c + theme(legend.title = element_blank()) + theme(legend.position = "right")
 c
+
+######Stop here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 # c <- ggplot(bodytime, aes(x = Days, y = Wings))
 # c <- c + geom_point(aes(color = Group)) +
