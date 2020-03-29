@@ -45,8 +45,25 @@ head(data.BS)
 tail(data.BS)
 summary(data.BS)
 
+
 ####Body Size analysism####
 summary(Avg.mm)
+
+  #excluding NA values 
+bodysize <- data.BS[-which(is.na(Avg.mm)),]
+dim(bodysize)
+head(bodysize)
+tail(bodysize)
+
+  #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
+testBSxTreat
+
+mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
+head(mu)
+
+
+####Body Size analysism####
 
   #excluding NA values 
 bodysize <- data.BS[-which(is.na(Avg.mm)),]
@@ -73,6 +90,7 @@ h <- h + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set
 h
 
 ####Development time analysism#### (stopping here)
+
 summary(Time.development.days)
 
   #excluding NA values 
