@@ -15,14 +15,14 @@ library(lmtest)
 ####loading dataset####
 completeDataset <- read.csv("completeDataset.csv", header = T)
 
-#checking dataset
+  #checking dataset
 dim(completeDataset)
 head(completeDataset)
 tail(completeDataset)
 summary(completeDataset)
 attach(completeDataset) #to access any variables of dataset
 
-#excluding males
+  #excluding males
 summary(comments)
 femData <- completeDataset[-which(comments == 'male'),]
 dim(femData)
@@ -32,7 +32,7 @@ summary(femData)
 attach(femData)
 summary(comments)
 
-#get only bees from 1st brood 
+  #get only bees from 1st brood 
 summary(Brood)
 data.BS <- femData[which(Brood == '1stBrood'),]
 dim(data.BS)
@@ -42,7 +42,7 @@ summary(data.BS)
 attach(data.BS)
 summary(Brood)
 
-#order dataset by treatment group and QueenID
+  #order dataset by treatment group and QueenID
 data.BS <- data.BS[with(data.BS, order(Treatment, QueenID)),]
 dim(data.BS)
 head(data.BS)
@@ -52,7 +52,7 @@ summary(data.BS)
 ####Body Size analysism####
 summary(Avg.mm)
 
-#excluding NA values 
+  #excluding NA values 
 bodysize <- subset(data.BS, !is.na(Avg.mm))
 dim(bodysize)
 head(bodysize)
@@ -60,14 +60,14 @@ tail(bodysize)
 attach(bodysize)
 summary(Avg.mm)
 
-#test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+  #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
 testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
 testBSxTreat
 
 mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
 head(mu)
 
-#histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+  #histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
 h<-ggplot(bodysize, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.1)
 h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Treatment),
@@ -81,7 +81,7 @@ h
 ####Development time analysis####
 summary(Time.development.days)
 
-#excluding missing values
+  #excluding missing values
 devtime <- subset(data.BS, !is.na(Time.development.days))
 dim(devtime)
 head(devtime)
@@ -90,14 +90,14 @@ summary(devtime)
 attach(devtime)
 summary(Time.development.days)
 
-#test t Body Size versus group.reared
+  #test t Body Size versus group.reared
 testDTxTreat <- t.test(Time.development.days ~ Treatment, devtime)
 testDTxTreat
 
 mi <- ddply(devtime, "Treatment", summarise, grp.mean=mean(Time.development.days))
 head(mi)
 
-#histograma Developmental time versus Treatment (queen vs worker reared)
+  #histograma Developmental time versus Treatment (queen vs worker reared)
 t<-ggplot(devtime, aes(x=Time.development.days, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 1)
 t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Treatment),
@@ -110,14 +110,14 @@ t
 
 ####Correlation Developmental Time X Body Size####
 
-#excluding NA values 
+  #excluding NA values 
 bodytime <- subset(data.BS, !is.na(Avg.mm) & !is.na(Time.development.days))
 head(bodytime)
 dim(bodytime)
 summary(bodytime)
 attach(bodytime)
 
-#correlation ggpubr
+  #correlation ggpubr
 ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
@@ -134,22 +134,22 @@ c <- c + theme_classic()
 c <- c + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 c
 
-#Figures
-figureA <- ggarrange(h,t,c,
-                     ncol = 2, nrow = 2 )
-figureA
+        #Figures
+        figureA <- ggarrange(h,t,c,
+                                 ncol = 2, nrow = 2 )
+        figureA
 
 ####Sucrose graphics####
 summary(Sucrose.summary)
 
-#Sucrose data 
+  #Sucrose data 
 sucrose <- bodytime[-which(Sucrose.summary == ""),]
 dim(sucrose)
 head(sucrose)
 tail(sucrose)
 summary(sucrose)
 
-#different options of graphics for sucrose assay 
+  #different options of graphics for sucrose assay 
 s<- ggplot(sucrose, aes(x=Sucrose.summary, fill=Treatment, color=Treatment)) +
   geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
 s <- s + labs(x = "Assay Response (Sucrose)", y = "Count", title = "Sucrose response versus Group reared")
@@ -202,7 +202,7 @@ s5
 summary(LearningTraining.summary)
 summary(LearningTest.summary)
 
-#Learning data 
+  #Learning data 
 learningTraining <- bodytime[-which(LearningTraining.summary == ""),]
 dim(learningTraining)
 head(learningTraining)
@@ -215,7 +215,7 @@ head(learningTest)
 tail(learningTest)
 summary(learningTest)
 
-#different options of graphics for learning assay 
+  #different options of graphics for learning assay 
 
 l <- ggplot(learningTraining,aes(x = Treatment,fill = LearningTraining.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Trained")
@@ -237,7 +237,7 @@ l1
 ####Survival graphics####
 summary(Survival.hours)
 
-#Survival data 
+  #Survival data 
 survival <- subset(bodytime, !is.na(Survival.hours))
 head(survival)
 dim(survival)
