@@ -271,12 +271,13 @@ su
   ####Body size####
 BS1<-glm(Avg.mm~Treatment+Time.development.days+ColonyID_queen, data=bodytime, family=gaussian(link="identity")) ## Global Model 
 BS2<-glm(Avg.mm~Time.development.days+ColonyID_queen, data=bodytime, family=gaussian(link="identity"))
-BS3<-glm(Avg.mm~Treatment+ColonyID_queen, data=BS1$model, family=gaussian(link="identity")) 
-BS4<-glm(BS~Treatment+Time.development, data=alldata, family=gaussian(link="identity"))
+BS3<-glm(Avg.mm~Treatment+ColonyID_queen, data=bodytime, family=gaussian(link="identity")) 
+BS4<-glm(Avg.mm~Treatment+Time.development.days, data=bodytime, family=gaussian(link="identity"))
 
-lrtest(BS1, BS2) ##Treatment p=0.01
-lrtest(BS1, BS3) ##Development time p=0.07
-lrtest(BS1, BS4) ##Queen source colony not significant p=0.4
+lrtest(BS1, BS2) 
+lrtest(BS1, BS3) 
+lrtest(BS1, BS4) 
+
 
 
 
