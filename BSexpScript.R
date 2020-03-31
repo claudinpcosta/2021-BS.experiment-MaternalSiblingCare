@@ -274,6 +274,11 @@ lrtest(BSglobal, BS1)
 lrtest(BSglobal, BS2) 
 lrtest(BSglobal, BS3) 
 
+#another way to see the main effects
+bs.redux <- bodytime[,c("Avg.mm", "Treatment", "Time.development.days", "ColonyID_queen")]
+maineffects.glm <- glm(Avg.mm ~ ., family=Gamma(link = "inverse"), data=bs.redux)
+anova(maineffects.glm, test="Chi")
+
 #testing differences in variance between two treatments
 
 #body size vs rearing history 
@@ -303,6 +308,11 @@ lrtest(Sglobal, S1)
 lrtest(Sglobal, S2) 
 lrtest(Sglobal, S3) 
 
+#another way to see the main effects
+S.redux <- survival[,c("Avg.mm", "Treatment", "Time.development.days", "Survival.hours")]
+Smaineffect.glm <- glm(Survival.hours ~ ., family=poisson(link="log"), data=S.redux)
+anova(Smaineffect.glm, test="Chi")
+
 ####Learning stats####
 
 #obs.: data is binomial (yes - 1 or no - 0): binomal
@@ -321,6 +331,13 @@ lrtest(TrainGlobal, Train3)
 lrtest(TrainGlobal, Train4)
 lrtest(TrainGlobal, Train5)
 
+
+#another way to see the main effects
+LTR.redux <- learningTraining[,c("Avg.mm", "Treatment", "Time.development.days", "LearningTraining")]
+LTRmaineffect.glm <- glm(LearningTraining ~ ., family=binomial(link = "logit"), data=LTR.redux)
+anova(LTRmaineffect.glm, test="Chi")
+
+
 #LearningTesting
 TestGlobal<-glm(LearningTest~Treatment+Avg.mm+Time.development.days, data = learningTest, family = binomial(link = "logit")) #Global Model
 Test1<-glm(LearningTest~Avg.mm, data = learningTest, family = binomial(link = "logit")) #testing Treatment (queen.reared vs worker.reared) & developmental time
@@ -334,6 +351,11 @@ lrtest(TestGlobal, Test2)
 lrtest(TestGlobal, Test3)
 lrtest(TestGlobal, Test4)
 lrtest(TestGlobal, Test5)
+
+#another way to see the main effects
+LT.redux <- learningTest[,c("Avg.mm", "Treatment", "Time.development.days", "LearningTest")]
+LTmaineffect.glm <- glm(LearningTest ~ ., family=binomial(link = "logit"), data=LT.redux)
+anova(LTmaineffect.glm, test="Chi")
 
 ####Learning stats####
 
@@ -352,6 +374,12 @@ lrtest(SRGlobal, SR2)
 lrtest(SRGlobal, SR3)
 lrtest(SRGlobal, SR4)
 lrtest(SRGlobal, SR5)
+
+#another way to see the main effects
+SU.redux <- sucrose[,c("Avg.mm", "Treatment", "Time.development.days", "Sucrose.response")]
+SUmaineffect.glm <- glm(Sucrose.response ~ ., family=binomial(link = "logit"), data=SU.redux)
+anova(SUmaineffect.glm, test="Chi")
+
 
 #Sucrose.concentration
 suc.con <- subset(sucrose, !is.na(Sucrose.conc))
@@ -378,4 +406,7 @@ lrtest(SCGlobal, SC3)
 lrtest(SCGlobal, SC4)
 lrtest(SCGlobal, SC5)
 
-
+#another way to see the main effects
+SC.redux <- suc.con[,c("Avg.mm", "Treatment", "Time.development.days", "Sucrose.conc")]
+SCmaineffect.glm <- glm(Sucrose.conc ~ ., family=poisson(link = "log"), data=SC.redux)
+anova(SCmaineffect.glm, test="Chi")
