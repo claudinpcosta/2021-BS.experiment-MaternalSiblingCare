@@ -15,14 +15,14 @@ library(lmtest)
 ####loading dataset####
 completeDataset <- read.csv("completeDataset.csv", header = T)
 
-  #checking dataset
+#checking dataset
 dim(completeDataset)
 head(completeDataset)
 tail(completeDataset)
 summary(completeDataset)
 attach(completeDataset) #to access any variables of dataset
 
-  #excluding males
+#excluding males
 summary(comments)
 femData <- completeDataset[-which(comments == 'male'),]
 dim(femData)
@@ -32,7 +32,7 @@ summary(femData)
 attach(femData)
 summary(comments)
 
-  #get only bees from 1st brood 
+#get only bees from 1st brood 
 summary(Brood)
 data.BS <- femData[which(Brood == '1stBrood'),]
 dim(data.BS)
@@ -42,7 +42,7 @@ summary(data.BS)
 attach(data.BS)
 summary(Brood)
 
-  #order dataset by treatment group and QueenID
+#order dataset by treatment group and QueenID
 data.BS <- data.BS[with(data.BS, order(Treatment, QueenID)),]
 dim(data.BS)
 head(data.BS)
@@ -52,7 +52,7 @@ summary(data.BS)
 ####Body Size analysism####
 summary(Avg.mm)
 
-  #excluding NA values 
+#excluding NA values 
 bodysize <- subset(data.BS, !is.na(Avg.mm))
 dim(bodysize)
 head(bodysize)
@@ -60,14 +60,10 @@ tail(bodysize)
 attach(bodysize)
 summary(Avg.mm)
 
-  #test t Body Size (by wing measurement) versus Treatment (queen vs worker reared)
-testBSxTreat <- t.test(Avg.mm ~ Treatment, bodysize)
-testBSxTreat
-
 mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
 head(mu)
 
-  #histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
+#histograma Body Size (by wing measurement) versus Treatment (queen vs worker reared)
 h<-ggplot(bodysize, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.1)
 h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Treatment),
@@ -81,7 +77,7 @@ h
 ####Development time analysis####
 summary(Time.development.days)
 
-  #excluding missing values
+#excluding missing values
 devtime <- subset(data.BS, !is.na(Time.development.days))
 dim(devtime)
 head(devtime)
@@ -90,14 +86,10 @@ summary(devtime)
 attach(devtime)
 summary(Time.development.days)
 
-  #test t Body Size versus group.reared
-testDTxTreat <- t.test(Time.development.days ~ Treatment, devtime)
-testDTxTreat
-
 mi <- ddply(devtime, "Treatment", summarise, grp.mean=mean(Time.development.days))
 head(mi)
 
-  #histograma Developmental time versus Treatment (queen vs worker reared)
+#histograma Developmental time versus Treatment (queen vs worker reared)
 t<-ggplot(devtime, aes(x=Time.development.days, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 1)
 t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Treatment),
@@ -110,14 +102,14 @@ t
 
 ####Correlation Developmental Time X Body Size####
 
-  #excluding NA values 
+#excluding NA values 
 bodytime <- subset(data.BS, !is.na(Avg.mm) & !is.na(Time.development.days))
 head(bodytime)
 dim(bodytime)
 summary(bodytime)
 attach(bodytime)
 
-  #correlation ggpubr
+#correlation ggpubr
 ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
@@ -134,22 +126,22 @@ c <- c + theme_classic()
 c <- c + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 c
 
-        #Figures
-        figureA <- ggarrange(h,t,c,
-                                 ncol = 2, nrow = 2 )
-        figureA
+#Figures
+figureA <- ggarrange(h,t,c,
+                     ncol = 2, nrow = 2 )
+figureA
 
 ####Sucrose graphics####
 summary(Sucrose.summary)
 
-  #Sucrose data 
+#Sucrose data 
 sucrose <- bodytime[-which(Sucrose.summary == ""),]
 dim(sucrose)
 head(sucrose)
 tail(sucrose)
 summary(sucrose)
 
-  #different options of graphics for sucrose assay 
+#different options of graphics for sucrose assay 
 s<- ggplot(sucrose, aes(x=Sucrose.summary, fill=Treatment, color=Treatment)) +
   geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
 s <- s + labs(x = "Assay Response (Sucrose)", y = "Count", title = "Sucrose response versus Group reared")
@@ -202,7 +194,7 @@ s5
 summary(LearningTraining.summary)
 summary(LearningTest.summary)
 
-  #Learning data 
+#Learning data 
 learningTraining <- bodytime[-which(LearningTraining.summary == ""),]
 dim(learningTraining)
 head(learningTraining)
@@ -215,7 +207,7 @@ head(learningTest)
 tail(learningTest)
 summary(learningTest)
 
-  #different options of graphics for learning assay 
+#different options of graphics for learning assay 
 
 l <- ggplot(learningTraining,aes(x = Treatment,fill = LearningTraining.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Trained")
@@ -237,15 +229,11 @@ l1
 ####Survival graphics####
 summary(Survival.hours)
 
-  #Survival data 
+#Survival data 
 survival <- subset(bodytime, !is.na(Survival.hours))
 head(survival)
 dim(survival)
 summary(survival$Survival.hours)
-
-  #test t survival versus group.reared
-testSxGroup <- t.test(Survival.hours ~ Treatment, survival)
-testSxGroup
 
 cdata <- ddply(survival, c("Treatment"), summarise,
                N    = sum(Survival.hours),
@@ -254,7 +242,7 @@ cdata <- ddply(survival, c("Treatment"), summarise,
                se   = sd / sqrt(N))
 cdata
 
-  #barplot to survival
+#barplot to survival
 su <- ggplot(cdata, aes(x=Treatment, y=mean, fill = Treatment, color = Treatment)) + 
   geom_bar(position=position_dodge(), stat="identity", alpha = 0.5) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
@@ -268,181 +256,126 @@ su
 
 ####Stats####
 
-  ####Body size####
-BS1<-glm(Avg.mm~Treatment+Time.development.days+ColonyID_queen, data=bodytime, family=gaussian(link="identity")) ## Global Model 
-BS2<-glm(Avg.mm~Time.development.days+ColonyID_queen, data=bodytime, family=gaussian(link="identity"))
-BS3<-glm(Avg.mm~Treatment+ColonyID_queen, data=bodytime, family=gaussian(link="identity")) 
-BS4<-glm(Avg.mm~Treatment+Time.development.days, data=bodytime, family=gaussian(link="identity"))
+####Body size stats####
 
-lrtest(BS1, BS2) 
-lrtest(BS1, BS3) 
-lrtest(BS1, BS4) 
+#testing whether a random sample of data comes from a normal distribution
+shapiro.test(bodytime$Avg.mm)
+ggdensity(bodytime$Avg.mm)
+hist(bodytime$Avg.mm)
 
+#obs.: data doesn't come from a normal distribution: Gamma
 
+BSglobal<-glm(Avg.mm~Treatment+Time.development.days+ColonyID_queen, data=bodytime, family=Gamma(link = "inverse")) ## Global Model 
+BS1<-glm(Avg.mm~Time.development.days+ColonyID_queen, data=bodytime, family=Gamma(link = "inverse")) #testing Treatment (queen.reared vs worker.reared)
+BS2<-glm(Avg.mm~Treatment+ColonyID_queen, data=bodytime, family=Gamma(link = "inverse")) #testing developmental time
+BS3<-glm(Avg.mm~Treatment+Time.development.days, data=bodytime, family=Gamma(link = "inverse")) #testing colony source 
 
+lrtest(BSglobal, BS1) 
+lrtest(BSglobal, BS2) 
+lrtest(BSglobal, BS3) 
 
+#testing differences in variance between two treatments
 
-########################################By Kaleigh###############################################
-#BS Experiment Summer 2019
-#Set Working Directory  
-## Import Data 
-alldata<-read.csv("BS.S19.csv", sep=',', header=TRUE)
-head(alldata)
-survival<-subset(alldata, Survival.hours >=5, select=c(BeeID, MicrocolonyID, Treatment, BS, Time.development, Survival.hours))
-attach(alldata)
-detach(alldata)
+#body size vs rearing history 
+wilcox.test(Avg.mm~Treatment, data=bodytime)
 
-learning<-read.csv("learning.csv", header=TRUE)
-sucrose<-read.csv("sucrose.csv", header=TRUE)
-attach(learning)
-#Packages 
-library(ggplot2) #Makes pretty graphs
-library(lme4) #Runs linear mixed effect models
-library(multcomp) #Posthoc analyses
-library(car)
-library(AICcmodavg)
-library(lmtest)
+#developmental time vs rearing history 
+wilcox.test(Time.development.days~Treatment, data=bodytime)
 
-##BODY SIZE STATS 
+####Perfomance stats####
 
+####Survival stats####
+summary(survival$Survival.hours)
 
-BS1<-glm(BS~Treatment+Time.development+ColonyID_queen, data=alldata, family=gaussian(link="identity")) ## Global Model 
-BS2<-glm(BS~Time.development+ColonyID_queen, data=alldata, family=gaussian(link="identity"))
-BS3<-glm(BS~Treatment+ColonyID_queen, data=BS1$model, family=gaussian(link="identity")) 
-BS4<-glm(BS~Treatment+Time.development, data=alldata, family=gaussian(link="identity"))
+#testing whether a random sample of data comes from a normal distribution
+shapiro.test(survival$Survival.hours)
+ggdensity(survival$Survival.hours)
+hist(survival$Survival.hours)
 
-lrtest(BS1, BS2) ##Treatment p=0.01
-lrtest(BS1, BS3) ##Development time p=0.07
-lrtest(BS1, BS4) ##Queen source colony not significant p=0.4
+#obs.: data doesn't come from a normal distribution: Poisson 
 
-##PLOT for body size
-cdat<-ddply(alldata, "Treatment", summarise, BS.mean=mean(BS, na.rm=TRUE))
+Sglobal<-glm(Survival.hours~Avg.mm+Treatment, data=survival, family=poisson(link="log")) #Global Model 
+S1<-glm(Survival.hours~Avg.mm, data=survival, family=poisson(link="log")) #testing Treatment (queen.reared vs worker.reared)
+S2<-glm(Survival.hours~Treatment, data=survival, family=poisson(link="log")) #testing body size
+S3<-glm(Survival.hours~Avg.mm*Treatment, data=survival, family=poisson(link="log")) #interaction 
 
-graph<-ggplot(alldata, aes(x=BS, fill=Treatment)) +
-  geom_histogram(binwidth=.1, alpha=.5, position="identity") +
-  geom_vline(data=cdat, aes(xintercept=BS.mean,  colour=Treatment),
-             linetype="dashed", size=1)+xlab("Body Size (mm)")+ylab("Frequency")+scale_fill_brewer(palette="Set1")
+lrtest(Sglobal, S1) 
+lrtest(Sglobal, S2) 
+lrtest(Sglobal, S3) 
 
-graph+theme(axis.title=element_text(size=14, face="bold"))+scale_fill_discrete(name="Rearing History",
-                                                                               breaks=c("queen.reared", "worker.reared"),
-                                                                               labels=c("Queen Reared", "Worker Reared"))
+####Learning stats####
 
+#obs.: data is binomial (yes - 1 or no - 0): binomal
 
-pdat<-ddply(alldata, "Treatment", summarise, Time.development.mean=mean(Time.development, na.rm=TRUE))
+#LearningTraining
+TrainGlobal<-glm(LearningTraining~Treatment+Avg.mm+Time.development.days, data = learningTraining, family = binomial(link = "logit")) #Global Model
+Train1<-glm(LearningTraining~Avg.mm, data = learningTraining, family = binomial(link = "logit")) #testing Treatment (queen.reared vs worker.reared) & developmental time
+Train2<-glm(LearningTraining~Treatment, data = learningTraining, family = binomial(link = "logit")) #testing body size & developmental time
+Train3<-glm(LearningTraining~Treatment+Avg.mm, data = learningTraining, family = binomial(link = "logit")) # #testing developmental time
+Train4<-glm(LearningTraining~Time.development.days+Avg.mm, data = learningTraining, family = binomial(link = "logit")) ##testing treatment
+Train5<-glm(LearningTraining~Time.development.days+Treatment, data = learningTraining, family = binomial(link = "logit")) ##testing body size
 
-graph<-ggplot(alldata, aes(x=Time.development, fill=Treatment)) +
-  geom_histogram(binwidth=1, alpha=.5, position="identity") +
-  geom_vline(data=pdat, aes(xintercept=Time.development.mean,  colour=Treatment),
-             linetype="dashed", size=1)+xlab("Development Time (days)")+ylab("Frequency")+scale_fill_brewer(palette="Set1")
+lrtest(TrainGlobal, Train1)
+lrtest(TrainGlobal, Train2)
+lrtest(TrainGlobal, Train3)
+lrtest(TrainGlobal, Train4)
+lrtest(TrainGlobal, Train5)
 
-graph+theme(axis.title=element_text(size=14, face="bold"))+scale_fill_discrete(name="Rearing History",
-                                                                               breaks=c("queen.reared", "worker.reared"),
-                                                                               labels=c("Queen Reared", "Worker Reared"))
+#LearningTesting
+TestGlobal<-glm(LearningTest~Treatment+Avg.mm+Time.development.days, data = learningTest, family = binomial(link = "logit")) #Global Model
+Test1<-glm(LearningTest~Avg.mm, data = learningTest, family = binomial(link = "logit")) #testing Treatment (queen.reared vs worker.reared) & developmental time
+Test2<-glm(LearningTest~Treatment, data = learningTest, family = binomial(link = "logit")) #testing body size & developmental time
+Test3<-glm(LearningTest~Treatment+Avg.mm, data = learningTest, family = binomial(link = "logit")) #testing developmental time
+Test4<-glm(LearningTest~Avg.mm+Time.development.days, data = learningTest, family = binomial(link = "logit")) #testing treatment
+Test5<-glm(LearningTest~Treatment+Time.development.days, data = learningTest, family = binomial(link = "logit")) #testing body size
 
-##Levene's test to test for differences in variance between two treatments
+lrtest(TestGlobal, Test1)
+lrtest(TestGlobal, Test2)
+lrtest(TestGlobal, Test3)
+lrtest(TestGlobal, Test4)
+lrtest(TestGlobal, Test5)
 
-leveneTest(BS~Treatment, data=alldata)
+####Learning stats####
 
-leveneTest(Time.development~Treatment, data=alldata)
+#Sucrose.response
+#obs.: we have data is binomial (yes - 1 or no - 0): binomal
 
+SRGlobal<-glm(Sucrose.response~Treatment+Avg.mm+Time.development.days, data = sucrose, family = binomial(link = "logit")) #Global Model
+SR1<-glm(Sucrose.response~Avg.mm, data = sucrose, family = binomial(link = "logit")) #testing Treatment (queen.reared vs worker.reared) & developmental time
+SR2<-glm(Sucrose.response~Treatment, data = sucrose, family = binomial(link = "logit")) #testing body size & developmental time
+SR3<-glm(Sucrose.response~Treatment+Avg.mm, data = sucrose, family = binomial(link = "logit")) # #testing developmental time
+SR4<-glm(Sucrose.response~Time.development.days+Avg.mm, data = sucrose, family = binomial(link = "logit")) ##testing treatment
+SR5<-glm(Sucrose.response~Time.development.days+Treatment, data = sucrose, family = binomial(link = "logit")) ##testing body size
 
-##Development time plot
-regression.plot<-ggplot(alldata, aes(x=Time.development, y=BS, color=Treatment)) + geom_point(shape=1) +
-  scale_colour_hue(l=50) + # Use a slightly darker palette than normal
-  geom_smooth(method=lm, fullrange=TRUE)
+lrtest(SRGlobal, SR1)
+lrtest(SRGlobal, SR2)
+lrtest(SRGlobal, SR3)
+lrtest(SRGlobal, SR4)
+lrtest(SRGlobal, SR5)
 
-regression.plot+xlab("Development Time (days)")+ylab("Body size (mm)")
+#Sucrose.concentration
+suc.con <- subset(sucrose, !is.na(Sucrose.conc))
 
+#testing whether a random sample of data comes from a normal distribution
+shapiro.test(suc.con$Sucrose.conc)
+ggdensity(suc.con$Sucrose.conc)
+hist(suc.con$Sucrose.conc)
 
+#obs.: data doesn't come from a normal distribution:  poisson
 
-## PERFORMANCE STATS 
+suc.con$Sucrose.conc <- suc.con$Sucrose.conc * 100 #The Poisson model is about counts. Count values are positive natural numbers including zero (0, 1, 2, 3, ...)
 
-#1) Survival
+SCGlobal<-glm(Sucrose.conc~Treatment+Avg.mm+Time.development.days, data = suc.con, family = poisson(link = "log")) #Global Model
+SC1<-glm(Sucrose.conc~Avg.mm, data = suc.con, family = poisson(link = "log")) #testing Treatment (queen.reared vs worker.reared) & developmental time
+SC2<-glm(Sucrose.conc~Treatment, data = suc.con, family = poisson(link = "log")) #testing body size & developmental time
+SC3<-glm(Sucrose.conc~Treatment+Avg.mm, data = suc.con, family = poisson(link = "log")) # #testing developmental time
+SC4<-glm(Sucrose.conc~Time.development.days+Avg.mm, data = suc.con, family = poisson(link = "log")) ##testing treatment
+SC5<-glm(Sucrose.conc~Time.development.days+Treatment, data = suc.con, family = poisson(link = "log")) ##testing body size
 
-hist(alldata$Survival.hours) ##Poisson distribution
-
-SP1<-glm(alldata$Survival.hours~alldata$BS+alldata$ColonyID_queen+alldata$Treatment, family=poisson(link="log")) 
-SP2<-glm(alldata$Survival.hours~alldata$BS+alldata$Treatment,family=poisson(link="log"))
-SP3<-glm(alldata$Survival.hours~alldata$BS, family=poisson(link="log"))
-SP4<-glm(alldata$Survival.hours~alldata$Treatment,  data=SP2$model, family=poisson(link="log"))
-
-lrtest(SP2, SP3)
-lrtest(SP2, SP4) 
-
-
-
-survival.plot<-ggplot(alldata, aes(x=BS, y=Survival.hours, fill= Treatment, color=Treatment)) + geom_point(shape=1) +
-  scale_colour_hue(l=50) + # Use a slightly darker palette than normal
-  geom_smooth(method=lm, fullrange=TRUE)+
-  labs(x = "Maginal cell length (mm)", y = "Survival Time (hours)", title = "Survival versus Body size") 
-r <- survival.plot + theme(legend.title = element_blank()) + theme(legend.position = "right")
-r <- r + theme_classic()
-r <- r + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-r
-
-
-cdata <- ddply(alldata, c("Treatment"), summarise,
-               N    = sum(!is.na(Survival.hours)),
-               mean = mean(Survival.hours, na.rm=TRUE),
-               sd   = sd(Survival.hours, na.rm=TRUE),
-               se   = sd / sqrt(N)
-)
-
-
-
-su <- ggplot(cdata, aes(x=Treatment, y=mean, fill = Treatment, color = Treatment)) + 
-  geom_bar(position=position_dodge(), stat="identity", alpha = 0.5) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
-                width=.2,                    # Width of the error bars
-                position=position_dodge(.9))
-su <- su + labs(x = "Treatment", title = "Survival")
-su <- su + theme(legend.title = element_blank()) + theme(legend.position = "right")
-su <- su + theme_classic()
-su <- su + scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-su
-
-##Learning
-
-tmodel<-glm(alldata$LearningTraining~alldata$Treatment+alldata$BS, binomial)
-tmodel2<-glm(alldata$LearningTraining~alldata$Treatment, data=tmodel$model, binomial)
-
-lrtest(tmodel, tmodel2) ##Body size influences training regardless of treatment
-
-
-Lmodel<-glm(LearningTest~Treatment+BS+Time.development, binomial)
-Lmodel2<-glm(LearningTest~Treatment+BS, binomial)
-Lmodel3<-glm(LearningTest~Treatment+Time.development, binomial)
-Lmodel4<-glm(LearningTest~BS+Time.development, binomial)
-Lmodel5<-glm(LearningTest~BS, binomial)
-
-ggplot(learning,aes(x = Treatment,fill = LearningTest)) + 
-  geom_bar(position = "fill")+ylab("Proportion Trained")+scale_fill_discrete(name="Trained")+scale_fill_brewer(palette="RdYlGn")
-
-ggplot(learning, aes(x=Treatment, fill=LearningTest))+geom_bar(position = "fill")+ylab("Proportion Successful")+scale_fill_discrete(name="Chose Correct Color")
-
-
-ggplot(alldata, aes(x=LearningTraining, y=BS, color=Treatment))+geom_point(shape=1)+geom_smooth(method=lm)+ylab("Body Size")+xlab("Successfully Trained")
-
-
-##Sucrose Responsivness
-
-attach(sucrose)
-Smodel1<-glm(Response~Treatment+BS+Time.development, binomial)
-
-ggplot(sucrose,aes(x = Treatment,fill = Response)) + 
-  geom_bar(position = "fill")+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
-
-hist(Sucrose.conc)
-Smodel2<-glm(Sucrose.conc~Treatment+BS+Time.development, family=poisson(link="log"))
-Smodel3<-glm(Sucrose.conc~Treatment, family=poisson(link="log"))
-
-
-sdat<-ddply(sucrose, "Treatment", summarise, sucrose.mean=mean(Sucrose.conc, na.rm=TRUE))
-
-ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment)) +
-  geom_histogram(binwidth=.05, alpha=.5, position="identity") +
-  geom_vline(data=sdat, aes(xintercept=sucrose.mean,  colour=Treatment),
-             linetype="dashed", size=1)+xlab("Sucrose Concentration")+ylab("Frequency")+scale_fill_brewer(palette="Set1")
-
+lrtest(SCGlobal, SC1)
+lrtest(SCGlobal, SC2)
+lrtest(SCGlobal, SC3)
+lrtest(SCGlobal, SC4)
+lrtest(SCGlobal, SC5)
 
 
