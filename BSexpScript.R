@@ -327,10 +327,8 @@ lrtest(BSglobal, BS3)
 bs.redux <- bodytime[,c("Avg.mm", "Treatment", "Time.development.days", "ColonyID_queen")]
 maineffect.glm <- glm(Avg.mm ~ ., family=Gamma(link = "inverse"), data=bs.redux)
 anova(maineffect.glm, test="Chi")
+best.main.glm <- stepAIC(maineffect.glm)
 
-interactions.glm <- glm(Avg.mm ~ (.)^2, family=Gamma(link = "inverse"), data=bs.redux)
-best.interaction.glm <- stepAIC(interactions.glm, trace = 0)
-anova(best.interaction.glm, test = "Chi")
 
 #testing differences in variance between two treatments
 
@@ -365,6 +363,7 @@ lrtest(Sglobal, S3)
 S.redux <- survival[,c("Avg.mm", "Treatment", "Time.development.days", "Survival.hours")]
 Smaineffect.glm <- glm(Survival.hours ~ ., family=poisson(link="log"), data=S.redux)
 anova(Smaineffect.glm, test="Chi")
+Sbest.main.glm <- stepAIC(Smaineffect.glm)
 
 ####Learning stats####
 
@@ -389,6 +388,7 @@ lrtest(TrainGlobal, Train5)
 LTR.redux <- learningTraining[,c("Avg.mm", "Treatment", "Time.development.days", "LearningTraining")]
 LTRmaineffect.glm <- glm(LearningTraining ~ ., family=binomial(link = "logit"), data=LTR.redux)
 anova(LTRmaineffect.glm, test="Chi")
+LTRbest.main.glm <- stepAIC(LTRmaineffect.glm)
 
 
 #LearningTesting
@@ -409,6 +409,7 @@ lrtest(TestGlobal, Test5)
 LT.redux <- learningTest[,c("Avg.mm", "Treatment", "Time.development.days", "LearningTest")]
 LTmaineffect.glm <- glm(LearningTest ~ ., family=binomial(link = "logit"), data=LT.redux)
 anova(LTmaineffect.glm, test="Chi")
+LTbest.main.glm <- stepAIC(LTmaineffect.glm)
 
 ####Learning stats####
 
@@ -432,7 +433,7 @@ lrtest(SRGlobal, SR5)
 SU.redux <- sucrose[,c("Avg.mm", "Treatment", "Time.development.days", "Sucrose.response")]
 SUmaineffect.glm <- glm(Sucrose.response ~ ., family=binomial(link = "logit"), data=SU.redux)
 anova(SUmaineffect.glm, test="Chi")
-
+SUbest.main.glm <- stepAIC(SUmaineffect.glm)
 
 #Sucrose.concentration
 suc.con <- subset(sucrose, !is.na(Sucrose.conc))
@@ -463,3 +464,5 @@ lrtest(SCGlobal, SC5)
 SC.redux <- suc.con[,c("Avg.mm", "Treatment", "Time.development.days", "Sucrose.conc")]
 SCmaineffect.glm <- glm(Sucrose.conc ~ ., family=poisson(link = "log"), data=SC.redux)
 anova(SCmaineffect.glm, test="Chi")
+SCbest.main.glm <- stepAIC(SCmaineffect.glm) 
+
