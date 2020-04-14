@@ -14,6 +14,8 @@ library(lmtest)
 library(dplyr) 
 library(tidyr)
 library(cowplot)
+library(outliers)
+library(MuMIn)
 
 
 #### * LOADING DATASET * ####
@@ -53,7 +55,7 @@ head(data.BS)
 tail(data.BS)
 summary(data.BS)
 
-#Body Size complete####
+#Body Size complete (with samples from colonies without DevTime information)####
 summary(Avg.mm)
 
   #excluding NA values 
@@ -64,8 +66,15 @@ tail(bodysize)
 attach(bodysize)
 summary(Avg.mm)
 
-mu <- ddply(bodysize, "Treatment", summarise, grp.mean=mean(Avg.mm))
-head(mu)
+mu <- ddply(bodysize, "Treatment", summarise,
+            No.bees=length(Avg.mm),
+            grp.mean=mean(Avg.mm),
+            var=var(Avg.mm),
+            sd   = sd(Avg.mm, na.rm=TRUE),
+            se   = sd / sqrt(sum(Avg.mm)),
+            min=min(Avg.mm),
+            max=max(Avg.mm))
+mu
 
 #Development time complete####
 summary(Time.development.days)
@@ -79,17 +88,55 @@ summary(devtime)
 attach(devtime)
 summary(Time.development.days)
 
-mi <- ddply(devtime, "Treatment", summarise, grp.mean=mean(Time.development.days))
-head(mi)
 
 #Dataset with samples with Body Size and Development time information####
 
   #excluding NA values 
+bsdt <- subset(data.BS, !is.na(Avg.mm) & !is.na(Time.development.days))
+head(bsdt)
+dim(bsdt)
+summary(bsdt)
+attach(bsdt)
+
+  #searching Dev.Time outliers
+qnt <- quantile(Time.development.days, probs=c(.25, .75), na.rm = T)
+caps <- quantile(Time.development.days, probs=c(.05, .95), na.rm = T)
+HI <- 1.5 * IQR(Time.development.days, na.rm = T)
+Time.development.days[Time.development.days < (qnt[1] - HI)] <- caps[1]
+Time.development.days[Time.development.days > (qnt[2] + HI)] <- caps[2]
+scores(Time.development.days)  # z-scores => (x-mean)/sd
+out.DevTime <- scores(Time.development.days, type = "z", prob = 0.95)
+length(out.DevTime)
+bsdt$out.DevTime <- out.DevTime
+dim(bsdt)
+
+  #keep outliers
 bodytime <- subset(data.BS, !is.na(Avg.mm) & !is.na(Time.development.days))
 head(bodytime)
 dim(bodytime)
 summary(bodytime)
 attach(bodytime)
+
+dt <- ddply(bodytime, "Treatment", summarise, 
+            No.bees=length(Time.development.days),
+            grp.mean=mean(Time.development.days),
+            var=var(Time.development.days),
+            sd   = sd(Time.development.days, na.rm=TRUE),
+            se   = sd / sqrt(sum(Time.development.days)),
+            min=min(Time.development.days),
+            max=max(Time.development.days))
+dt
+
+bs <- ddply(bodytime, "Treatment", summarise,
+            No.bees=length(Avg.mm),
+            grp.mean=mean(Avg.mm),
+            var=var(Avg.mm),
+            sd   = sd(Avg.mm, na.rm=TRUE),
+            se   = sd / sqrt(sum(Avg.mm)),
+            min=min(Avg.mm),
+            max=max(Avg.mm))
+bs
+
 
 #Sucrose####
 summary(Sucrose.summary)
@@ -98,12 +145,16 @@ sucrose <- bodytime[-which(Sucrose.summary == ""),]
 dim(sucrose)
 head(sucrose)
 tail(sucrose)
-summary(sucrose)
+summary(sucrose$Sucrose.summary)
 
 sucrose %>%
   count(Treatment, Sucrose.summary, sort = TRUE)
 
 suc.con <- subset(sucrose, !is.na(Sucrose.conc))
+suc.con %>%
+  count(Treatment, Sucrose.conc.summary, sort = TRUE)
+
+suc.con.data <- read.csv("suc.concentration.csv", row.names = 1)
 
 #Learning####
 summary(LearningTraining.summary)
@@ -115,7 +166,7 @@ learningTraining <- bodytime[-which(LearningTraining.summary == ""),]
 dim(learningTraining)
 head(learningTraining)
 tail(learningTraining)
-summary(learningTraining)
+summary(learningTraining$LearningTraining.summary)
 learningTraining %>%
   count(Treatment, LearningTraining.summary, sort = TRUE)
 
@@ -125,33 +176,96 @@ learningTest <- bodytime[-which(LearningTest.summary == ""),]
 dim(learningTest)
 head(learningTest)
 tail(learningTest)
-summary(learningTest)
+summary(learningTest$LearningTest.summary)
 learningTest %>%
   count(Treatment, LearningTest.summary, sort = TRUE)
 
 
 #Survival####
-summary(Survival.hours)
+summary(bodytime$Survival.hours)
 
 survival <- subset(bodytime, !is.na(Survival.hours))
-survival <- survival[-which(Survival.hours >= 60),]
+survival <- survival[-which(survival$Survival.hours > 60),]
 head(survival)
 dim(survival)
 summary(survival$Survival.hours)
 
-cdata <- ddply(survival, c("Treatment"), summarise,
-               N    = sum(Survival.hours),
-               mean = mean(Survival.hours, na.rm=TRUE),
-               sd   = sd(Survival.hours, na.rm=TRUE),
-               se   = sd / sqrt(N))
-cdata
+surv <- ddply(survival, c("Treatment"), summarise,
+            No.bees=length(Survival.hours),
+            grp.mean=mean(Survival.hours),
+            var=var(Survival.hours),
+            sd   = sd(Survival.hours, na.rm=TRUE),
+            se   = sd / sqrt(sum(Survival.hours)),
+            min=min(Survival.hours),
+            max=max(Survival.hours))
+surv
 
+
+
+
+#Nest####
+
+nestDevTime <- ddply(bodytime, c("QueenID", "Treatment"), summarise,
+                     No.bees=length(Time.development.days),
+                     mean = mean(Time.development.days, na.rm=TRUE),
+                     var=var(Time.development.days),
+                     sd   = sd(Time.development.days, na.rm=TRUE),
+                     se   = sd / sqrt(sum(Time.development.days)),
+                     min=min(Time.development.days),
+                     max=max(Time.development.days))
+nestDevTime <- nestDevTime[with(nestDevTime, order(Treatment, QueenID)),]
+nestDevTime
+
+nestBodySize <- ddply(bodytime, c("QueenID", "Treatment"), summarise,
+                     No.bees=length(Avg.mm),
+                     mean = mean(Avg.mm, na.rm=TRUE),
+                     var=var(Avg.mm),
+                     sd   = sd(Avg.mm, na.rm=TRUE),
+                     se   = sd / sqrt(sum(Avg.mm)),
+                     min=min(Avg.mm),
+                     max=max(Avg.mm))
+nestBodySize <- nestBodySize[with(nestBodySize, order(Treatment, QueenID)),]
+nestBodySize
+
+
+nestSurvival <- ddply(survival, c("QueenID", "Treatment"), summarise,
+                      No.bees=length(Survival.hours),
+                      mean = mean(Survival.hours, na.rm=TRUE),
+                      var=var(Survival.hours),
+                      sd   = sd(Survival.hours, na.rm=TRUE),
+                      se   = sd / sqrt(sum(Survival.hours)),
+                      min=min(Survival.hours),
+                      max=max(Survival.hours))
+nestSurvival <- nestSurvival[with(nestSurvival, order(Treatment, QueenID)),]
+nestSurvival
+
+  #excluding nests with < 3 bees
+nestDT <- nestDevTime[which(nestDevTime$No.bees >= 3),]
+nestDT
+
+nestBS <- nestBodySize[which(nestBodySize$No.bees >= 3),]
+nestBS
 
 #Feeding rates####
 
 feeding.rate <- read.csv("feedingRates.csv")
 feeding.rate
 
+fd <- ddply(feeding.rate, c("Treatment"), summarise,
+                     mean3d = mean(Feeding.3d, na.rm=TRUE),
+                     sd3d   = sd(Feeding.3d, na.rm=TRUE),
+                     se3d   = sd3d / sqrt(sum(Feeding.3d)),
+                     min3d =min(Feeding.3d),
+                     max3d =max(Feeding.3d),
+            mean5d = mean(Feeding.5d, na.rm=TRUE),
+            sd5d   = sd(Feeding.5d, na.rm=TRUE),
+            se5d   = sd5d / sqrt(sum(Feeding.5d)),
+            min5d =min(Feeding.5d),
+            max5d =max(Feeding.5d))
+
+
+feeding.data <- read.csv("Feeding.csv")
+feeding.data
 
 
 
@@ -175,15 +289,20 @@ AIC(BSnull, BS1, BS2, BS3, BS4) # choose the best fit model (lower AIC value)
 
 #for best fit model
 summary(BS2)
-anova(BSnull, BS2)
-posthoc <- glht(BS2, linfct = mcp(Treatment = "Tukey"))
-summary(posthoc)
+lrtest(BSnull, BS2)
 
   #testing differences in BS between treatments
 
 #body size vs rearing history 
 wilcox.test(Avg.mm~Treatment, data=bodytime)
-compare_means(Avg.mm~Treatment, data=bodytime, method = "anova")
+
+#test of homogeneity of variances
+  #treatment
+leveneTest(Avg.mm~Treatment, data=bodytime)
+
+  #nest
+leveBSvsNest <- bodytime[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT042" ),]
+leveneTest(leveBSvsNest$Avg.mm~leveBSvsNest$QueenID)
 
 
 #Development time stats####
@@ -203,22 +322,40 @@ AIC(DTnull, DT1) # choose the best fit model (lower AIC value)
 #for best fit model
 summary(DT1)
 anova(DTnull, DT1)
-posthoc <- glht(DT1, linfct = mcp(Treatment = "Tukey"))
-summary(posthoc)
+
 
   #testing differences in Development Time between treatments
+
 #developmental time vs rearing history 
-wilcox.test(Time.development.days~Treatment, data=bodytime)
+wilcox.test(bodytime$Time.development.days~bodytime$Treatment)
+
+#test of homogeneity of variances
+  #treatment
+leveneTest(bodytime$Time.development.day~bodytime$Treatment)
+
+  #nest
+leveDTvsNest <- bodytime[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT042" ),]
+leveneTest(leveDTvsNest$Time.development.day~leveDTvsNest$QueenID)
 
 
 #Correlation BS vs Development time####
-cor.test(Avg.mm, Time.development.days, data=bodytime, method="spearman")
+cor.test(bodytime$Avg.mm, bodytime$Time.development.days, data=bodytime, method="spearman")
 
 
 #Survival####
 
-compare_means(Survival.hours ~ Treatment,  data = survival, method = "anova")
-wilcox.test(Survival.hours ~ Treatment,  data = survival)
+#testing differences in Survival between treatments
+wilcox.test(survival$Survival.hours ~ survival$Treatment)
+
+#Correlation Survival vs BS####
+cor.test(survival$Survival.hours, survival$Avg.mm, method="spearman")
+
+#test of homogeneity of variances
+leveneTest(survival$Survival.hours ~ survival$Treatment)
+
+#nest
+leveSvsNest <- survival[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT019" | QueenID == "MT001" | QueenID == "MT025"),]
+leveneTest(leveSvsNest$Avg.mm~leveSvsNest$QueenID)
 
 
   #testing whether a random sample of data comes from a normal distribution
@@ -253,9 +390,6 @@ AIC(Snull, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16
 #for best fit model
 summary(S6)
 anova(Snull, S6)
-posthoc <- glht(S6, linfct = mcp(Treatment = "Tukey"))
-summary(posthoc)
-
 
 #Learning stats####
 
@@ -290,8 +424,6 @@ AIC(LTRnull, LTR1, LTR2, LTR3, LTR4, LTR5, LTR6, LTR7, LTR8, LTR9, LTR10, LTR11,
 #for best fit model
 summary(LTR2)
 anova(LTRnull, LTR2)
-posthoc <- glht(LTR2, linfct = mcp(Treatment = "Tukey"))
-summary(posthoc)
 
 
 #LearningTesting
@@ -348,11 +480,10 @@ AIC(SUnull, SU1, SU2, SU3, SU4, SU5, SU6, SU7, SU8, SU9, SU10, SU11, SU12, SU13,
 #for best fit model
 summary(SU9)
 anova(SUnull, SU9)
-posthoc <- glht(SU9, linfct = mcp(Treatment = "Tukey"))
-summary(posthoc)
 
 
 #Sucrose.concentration
+ chisq.test(suc.con.data)
 
 #testing whether a random sample of data comes from a normal distribution
 shapiro.test(suc.con$Sucrose.conc)
@@ -389,8 +520,7 @@ AIC(SCnull, SC1, SC2, SC3, SC4, SC5, SC6, SC7, SC8, SC9, SC10, SC11, SC12, SC13,
 #for best fit model
 summary(SC1)
 anova(SCnull, SC1)
-posthoc <- glht(SC1, linfct = mcp(Treatment = "Tukey"))
-summary(posthoc)
+
 
 
 #Feeding####
@@ -403,58 +533,89 @@ wilcox.test(Feeding.5d~Treatment, data=feeding.rate)
 #### * GRAPHICS * ####
 
 #Body Size####
-h<-ggplot(bodytime, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
+h<-ggplot(bodysize, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.1)
 h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Treatment),
                     linetype="dashed", size=0.7) # Add mean lines
-h <- h + xlab("Maginal cell length (mm)")+ylab("Count")
+h <- h + xlab("Marginal cell length (mm)")+ylab("No. bees")
 h <- h + theme(legend.position = "right") + theme(legend.title = element_blank())
 h <- h + theme_classic()
-h <- h + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+h <- h + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 h
 
+h1 <-ggplot(bodytime, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
+  geom_histogram(position="identity", alpha = 0.5, binwidth = 0.1)
+h1 <- h1 + geom_vline(data=bs, aes(xintercept=grp.mean, color=Treatment),
+                    linetype="dashed", size=0.7) # Add mean lines
+h1 <- h1 + xlab("Marginal cell length (mm)")+ylab("No. bees")
+h1 <- h1 + theme(legend.position = "right") + theme(legend.title = element_blank())
+h1 <- h1 + theme_classic()
+h1 <- h1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+h1
+
 #Development time####
-t<-ggplot(devtime, aes(x=Time.development.days, fill=Treatment, color=Treatment)) +
+t<-ggplot(bodytime, aes(x=Time.development.days, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 1)
-t <- t + geom_vline(data=mi, aes(xintercept=grp.mean, color=Treatment),
+t <- t + geom_vline(data=dt, aes(xintercept=grp.mean, color=Treatment),
                     linetype="dashed", size=.7) # Add mean lines
-t <- t + labs(x = "Development time (days)", y = "Count")
+t <- t + labs(x = "Development time (days)", y = "No. bees")
 t <- t + theme(legend.title = element_blank()) + theme(legend.position = "right")
 t <- t + theme_classic()
-t <- t + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+t <- t + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 t
+
+#Nests vs Development Time####
+ne <- ggplot(nestDevTime, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatment, color = Treatment)) + 
+  geom_bar(position=position_dodge(), stat="identity", alpha = 0.5) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9))
+ne <- ne + labs(x = "Nests", y = "Development Duration (days)")
+ne <- ne + theme(legend.title = element_blank()) + theme(legend.position = "right")
+ne <- ne + theme_classic()
+ne <- ne + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne
+
+
+ne2 <-ggplot(nestDevTime, aes(x=Treatment, y=mean, fill = Treatment, color = Treatment)) +
+  geom_boxplot(alpha = 0.5)
+ne2 <- ne2 + labs(x = "Treatment", y = "Development time (days)")
+ne2 <- ne2 + theme(legend.title = element_blank()) + theme(legend.position = "right")
+ne2 <- ne2 + theme_classic()
+ne2 <- ne2 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne2 <- ne2 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+ne2
+
 
 #Correlation Developmental Time X Body Size####
 
 c<- ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
-          xlab = "Development time (Days)", ylab = "Maginal celll length (mm)")
+          xlab = "Development time (Days)", ylab = "Marginal celll length (mm)")
 c
 
 c1 <- ggplot(bodytime, aes(x = Time.development.days, y = Avg.mm))
+c1 <- c1 + geom_smooth(method=lm, se=FALSE, color="black")
 c1 <- c1 + geom_point(aes(color = Treatment)) +
-  geom_smooth(aes(color = Treatment, fill = Treatment), method = lm) +
+  geom_smooth(aes(color = Treatment, fill = Treatment), linetype="dashed", method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-c1 <- c1 + labs(x = "Development time (days)", y = "Maginal cell length (mm)")
+c1 <- c1 + labs(x = "Development time (days)", y = "Marginal cell length (mm)")
 c1 <- c1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 c1 <- c1 + theme_classic()
-c1 <- c1 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+c1 <- c1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 c1
 
 
 #Feeding####
 
-feeding.data <- read.csv("Feeding.csv")
-feeding.data
-
-f <- ggplot(feeding.data, aes(x=day, y=mean, group=Treatment, color=Treatment)) + 
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1) +
-  geom_line() + geom_point()
-f <- f + xlab("Day")+ylab("No. Feeding events")
+f <- ggplot(feeding.data, aes(x=day, y=mean, group=Treatment, color=Treatment, fill = Treatment)) + 
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, alpha = 0.5, size = 1) +
+  geom_line(alpha = 0.5, size = 1) + geom_point(alpha = 2)
+f <- f + xlab("Larval age (days)")+ylab("No. Feeding events")
 f <- f + theme(legend.position = "right") + theme(legend.title = element_blank())
 f <- f + theme_classic()
-f <- f + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+f <- f + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 f
 
                       #figure1 to export 
@@ -469,15 +630,15 @@ f
 
 s<- ggplot(sucrose, aes(x=Sucrose.summary, fill=Treatment, color=Treatment)) +
   geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
-s <- s + labs(x = "Sucrose Response", y = "Count")
+s <- s + labs(x = "Sucrose Response", y = "No. bees")
 s <- s + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s <- s + theme_classic()
-s <- s + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+s <- s + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s
 
 s1 <- ggplot(sucrose,aes(x = Treatment,fill = Sucrose.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
-s1 <- s1 + labs(x = "Treatment", fill = "Response")
+s1 <- s1 + labs(x = "Rearing history", fill = "Assay response")
 s1 <- s1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s1 <- s1 + theme_classic()
 s1 <- s1 + scale_color_grey()+scale_fill_grey()
@@ -486,10 +647,10 @@ s1
 
 s2 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
   geom_bar(data=sucrose, stat="count", position="dodge", alpha = 0.5)
-s2 <- s2 + labs(x = "Sucrose Response (Concentration)", y = "Count", title = "Sucrose response (Concentration) versus Group reared")
+s2 <- s2 + labs(x = "Sucrose Response (Concentration)", y = "No. bees", title = "Sucrose response (Concentration) versus Group reared")
 s2 <- s2 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s2 <- s2 + theme_classic()
-s2 <- s2 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+s2 <- s2 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s2
 
 s3 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
@@ -497,46 +658,46 @@ s3 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
 s3 <- s3 + labs(x = "Sucrose Response (Concentration)", title = "Sucrose response (Concentration) versus Group reared")
 s3 <- s3 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s3 <- s3 + theme_classic()
-s3 <- s3 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+s3 <- s3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s3
 
 s4 <-ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.05)
-s4 <- s4 + labs(x = "Sucrose concentration", y = "Count")
+s4 <- s4 + labs(x = "Sucrose concentration", y = "No. bees responded")
 s4 <- s4 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s4 <- s4 + theme_classic()
-s4 <- s4 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+s4 <- s4 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s4
 
 s5 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatment)) + 
   geom_point(alpha = 0.6, position = "jitter")
-s5 <- s5 + labs(x = "Sucrose Response (Concentration)", y = "Maginal cell length (mm)", title = "Sucrose response versus Body size")
+s5 <- s5 + labs(x = "Sucrose Response (Concentration)", y = "Marginal cell length (mm)", title = "Sucrose response versus Body size")
 s5 <- s5 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s5 <- s5 + theme_classic()
-s5 <- s5 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+s5 <- s5 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s5
 
 s6 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatment))
 s6 <- s6 + geom_point() +
 geom_smooth(aes(color = Treatment, fill = Treatment), method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-s6 <- s6 + labs(x = "Sucrose Response (Concentration)", y = "Maginal cell length (mm)", title = "Sucrose response versus Body size")
+s6 <- s6 + labs(x = "Sucrose Response (Concentration)", y = "Marginal cell length (mm)", title = "Sucrose response versus Body size")
 s6 <- s6 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s6 <- s6 + theme_classic()
-s6 <- s6 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+s6 <- s6 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s6
 
 s7 <- ggscatter(sucrose, x = "Sucrose.conc", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
-          xlab = "Sucrose Response (Concentration)", ylab = "Maginal celll length (mm)")
+          xlab = "Sucrose Response (Concentration)", ylab = "Marginal celll length (mm)")
 s7
 
 #Learning####
 
 l <- ggplot(learningTraining,aes(x = Treatment,fill = LearningTraining.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Trained")
-l <- l + labs(x = "Treatment", fill = "Response")
+l <- l + labs(x = "Rearing history", fill = "Assay response")
 l <- l + theme(legend.title = element_blank())
 l <- l + theme_classic()
 l <- l + scale_fill_brewer(palette = "Dark2") + scale_color_brewer(palette = "Dark2")
@@ -547,7 +708,7 @@ l
 
 l1 <- ggplot(learningTest,aes(x = Treatment,fill = LearningTest.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Successful")
-l1 <- l1 + labs(x = "Treatment", fill = "Response")
+l1 <- l1 + labs(x = "Rearing history", fill = "Assay response")
 l1 <- l1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 l1 <- l1 + theme_classic()
 l1 <- l1 + scale_color_grey()+scale_fill_grey()
@@ -555,27 +716,28 @@ l1 <- l1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.re
 l1
 
 #Survival####
-su <- ggplot(cdata, aes(x=Treatment, y=mean, fill = Treatment, color = Treatment)) + 
+su <- ggplot(surv, aes(x=Treatment, y=grp.mean, fill = Treatment, color = Treatment)) + 
   geom_bar(position=position_dodge(), stat="identity", alpha = 0.5) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
+  geom_errorbar(aes(ymin=grp.mean-se, ymax=grp.mean+se),
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9))
-su <- su + labs(x = "Treatment", y = "Hours")
+su <- su + labs(x = "Rearing history", y = "Hours")
 su <- su + theme(legend.title = element_blank()) + theme(legend.position = "right")
 su <- su + theme_classic()
-su <- su + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+su <- su + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 su <- su + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
 su
 
 
-su1 <- ggplot(survival, aes(x=Survival.hours, y=Avg.mm, fill=Treatment, color=Treatment))
-su1 <- su1 + geom_point() +
-  geom_smooth(aes(color = Treatment, fill = Treatment), method = lm) +
+su1 <- ggplot(survival, aes(x=Survival.hours, y=Avg.mm))
+su1 <- su1 + geom_smooth(method=lm, se=FALSE, color="black" )
+su1 <- su1 + geom_point(aes(color = Treatment)) +
+  geom_smooth(aes(color = Treatment, fill = Treatment), linetype="dashed", method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-su1 <- su1 + labs(x = "Hours", y = "Maginal cell length (mm)")
+su1 <- su1 + labs(x = "Survival (hours)", y = "Marginal cell length (mm)")
 su1 <- su1 + theme(legend.title = element_blank())
 su1 <- su1 + theme_classic()
-su1 <- su1 + scale_fill_brewer(name = "Rearing History", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared")) + scale_color_brewer(name = "Rearing History", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen Reared", "Worker Reared"),palette = "Set1")
+su1 <- su1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 su1 <- su1 + theme(legend.position = "top")
 su1
 
@@ -583,25 +745,40 @@ su1
 su2 <- ggscatter(survival, x = "Survival.hours", y = "Avg.mm",
                 add = "reg.line", conf.int = TRUE,
                 cor.coef = TRUE, cor.method = "spearman",
-                xlab = "Survival (hours)", ylab = "Maginal celll length (mm)")
+                xlab = "Survival (hours)", ylab = "Marginal celll length (mm)")
 su2
 
-                      #figure2 to export 
-                      #save legends
-                      legend1 <- get_legend(l)
-                      legend2 <- get_legend(su1)
-                      #Remove the legend from the box plot
-                      l <- l + theme(legend.position="none")
-                      l1 <- l1 + theme(legend.position="none")
-                      s1 <- s1 + theme(legend.position="none")
-                      s4 <- s4 + theme(legend.position="none")
-                      su <- su + theme(legend.position="none")
-                      su1 <- su1 + theme(legend.position="none")
-                      
-                      fig2 <- ggarrange(
-                        l,l1,s1,s4,su, su1,legend1, legend2, ncol = 2, nrow =  4,
-                        labels = c("A", "B", "C", "D", "E", "F")
-                      )
-                      fig2
-                      
-                      
+
+su3 <-ggplot(survival, aes(x=Survival.hours, fill=Treatment, color=Treatment)) +
+  geom_histogram(position="identity", alpha = 0.5, binwidth = 3)
+su3 <- su3 + labs(x = "Survival (hours)", y = "No. bees")
+su3 <- su3 + theme(legend.title = element_blank()) 
+su3 <- su3 + theme_classic()
+su3 <- su3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+su3 <- su3 + theme(legend.position = "top")
+su3
+
+                #figure2 to export 
+                #save legends
+                legend1 <- get_legend(l)
+                legend2 <- get_legend(su3)
+                #Remove the legend from the box plot
+                s1 <- s1 + theme(legend.position="none")
+                s4 <- s4 + theme(legend.position="none")
+                l <- l + theme(legend.position="none")
+                l1 <- l1 + theme(legend.position="none")
+                su3 <- su3 + theme(legend.position="none")
+                su1 <- su1 + theme(legend.position="none")
+                
+                fig2 <- ggarrange(
+                  s1,s4, l,l1,su3, su1,legend1, legend2, ncol = 2, nrow =  4,
+                  labels = c("A", "B", "C", "D", "E", "F")
+                )
+                fig2
+                
+
+
+
+
+
+                    
