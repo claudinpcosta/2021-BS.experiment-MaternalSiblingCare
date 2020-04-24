@@ -5,6 +5,7 @@
 ####all packages used here####
 library(plyr)
 library(ggplot2) 
+library(gridExtra)
 library(ggpubr) 
 library(lme4)
 library(multcomp)
@@ -178,7 +179,7 @@ head(learningTest)
 tail(learningTest)
 summary(learningTest$LearningTest.summary)
 learningTest %>%
-  count(Treatment, LearningTest.summary, sort = TRUE)
+  count(Avg.mm, LearningTest.summary, sort = TRUE)
 
 
 #Survival####
@@ -609,14 +610,14 @@ c
 
 c1 <- ggplot(bodytime, aes(x = Time.development.days, y = Avg.mm))
 c1 <- c1 + geom_smooth(method=lm, se=FALSE, color="black")
-c1 <- c1 + geom_point(aes(color = Treatment)) +
+c1 <- c1 + geom_jitter(aes(color = Treatment)) + 
   geom_smooth(aes(color = Treatment, fill = Treatment), linetype="dashed", method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 c1 <- c1 + labs(x = "Development time (days)", y = "Marginal cell length (mm)")
 c1 <- c1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 c1 <- c1 + theme_classic()
 c1 <- c1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
-c1
+c1 
 
 
 #Feeding####
@@ -634,7 +635,8 @@ f
                       fig1 <- ggarrange(
                         h,t,c1,f, ncol = 2, nrow =  2,
                         labels = c("A", "B", "C", "D"),
-                        common.legend = TRUE, legend = "bottom"
+                        common.legend = TRUE, legend = "bottom",
+                        widths = c(3, 3)
                       )
                       fig1
 
@@ -651,10 +653,11 @@ s
 s1 <- ggplot(sucrose,aes(x = Treatment,fill = Sucrose.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
 s1 <- s1 + labs(x = "Rearing history", fill = "Assay response")
-s1 <- s1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
+s1 <- s1 + theme(legend.title = element_blank())
 s1 <- s1 + theme_classic()
 s1 <- s1 + scale_color_grey()+scale_fill_grey()
 s1 <- s1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+s1 <- s1 + theme(legend.position = "top")
 s1
 
 s2 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
@@ -676,9 +679,10 @@ s3
 s4 <-ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 0.05)
 s4 <- s4 + labs(x = "Sucrose concentration", y = "No. bees responded")
-s4 <- s4 + theme(legend.title = element_blank()) + theme(legend.position = "right")
+s4 <- s4 + theme(legend.title = element_blank()) 
 s4 <- s4 + theme_classic()
 s4 <- s4 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s4 <- s4 + theme(legend.position = "top")
 s4
 
 s5 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatment)) + 
@@ -725,6 +729,7 @@ l1 <- l1 + theme(legend.title = element_blank()) + theme(legend.position = "righ
 l1 <- l1 + theme_classic()
 l1 <- l1 + scale_color_grey()+scale_fill_grey()
 l1 <- l1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+l1 <- l1 + theme(legend.position = "top")
 l1
 
 #Survival####
@@ -743,7 +748,7 @@ su
 
 su1 <- ggplot(survival, aes(x=Survival.hours, y=Avg.mm))
 su1 <- su1 + geom_smooth(method=lm, se=FALSE, color="black" )
-su1 <- su1 + geom_point(aes(color = Treatment)) +
+su1 <- su1 +  geom_jitter(aes(color = Treatment)) +
   geom_smooth(aes(color = Treatment, fill = Treatment), linetype="dashed", method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
 su1 <- su1 + labs(x = "Survival (hours)", y = "Marginal cell length (mm)")
@@ -770,27 +775,44 @@ su3 <- su3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks
 su3 <- su3 + theme(legend.position = "top")
 su3
 
-                #figure2 to export 
-                #save legends
-                legend1 <- get_legend(l)
-                legend2 <- get_legend(su3)
-                #Remove the legend from the box plot
-                s1 <- s1 + theme(legend.position="none")
-                s4 <- s4 + theme(legend.position="none")
+               
+               
                 l <- l + theme(legend.position="none")
                 l1 <- l1 + theme(legend.position="none")
                 su3 <- su3 + theme(legend.position="none")
                 su1 <- su1 + theme(legend.position="none")
                 
-                fig2 <- ggarrange(
-                  s1,s4, l,l1,su3, su1,legend1, legend2, ncol = 2, nrow =  4,
-                  labels = c("A", "B", "C", "D", "E", "F")
-                )
+                #figure2 Sucrose to export 
+                #save legends
+                legend1 <- get_legend(s1)
+                legend2 <- get_legend(s4)
+                #Remove the legend from the box plot
+                s1 <- s1 + theme(legend.position="none")
+                s4 <- s4 + theme(legend.position="none")
+                
+                fig2 <- ggarrange(s1,s4, legend1, legend2,
+                             ncol=2, nrow = 2, 
+                             widths = c(3, 3), heights = c(2.5, 0.2),
+                             labels = c("A", "B", "", ""))
                 fig2
+    
+
+                #figure3 Learning to export 
+                fig3 <- ggarrange(
+                  l,l1,
+                  widths = c(3, 3), heights = c(2.5, 0.2),
+                  common.legend = TRUE, legend = "bottom",
+                  labels = c("A", "B"))
+                fig3
                 
 
-
-
-
-
-                    
+                #figure4 to export 
+                fig4 <- ggarrange(
+                  su3, su1,
+                  widths = c(3, 4), heights = c(2.5, 0.2),
+                  common.legend = TRUE, legend = "bottom",
+                  labels = c("A", "B"))
+                fig4
+                
+                
+                
