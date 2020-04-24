@@ -564,7 +564,7 @@ t <- t + theme_classic()
 t <- t + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 t
 
-#Nests vs Development Time####
+#Nests####
 ne <- ggplot(nestDevTime, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatment, color = Treatment)) + 
   geom_bar(position=position_dodge(), stat="identity", alpha = 0.5) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
@@ -585,6 +585,18 @@ ne2 <- ne2 + theme_classic()
 ne2 <- ne2 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 ne2 <- ne2 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
 ne2
+
+
+ne3 <- ggplot(nestBodySize, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatment, color = Treatment)) + 
+  geom_bar(position=position_dodge(), stat="identity", alpha = 0.5) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9))
+ne3 <- ne3 + labs(x = "Nests", y = "Marginal cell length (mm)")
+ne3 <- ne3 + theme(legend.title = element_blank()) + theme(legend.position = "right")
+ne3 <- ne3 + theme_classic()
+ne3 <- ne3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne3
 
 
 #Correlation Developmental Time X Body Size####
