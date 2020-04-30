@@ -768,6 +768,8 @@ su2
 
 su3 <-ggplot(survival, aes(x=Survival.hours, fill=Treatment, color=Treatment)) +
   geom_histogram(position="identity", alpha = 0.5, binwidth = 3)
+su3 <- su3 + geom_vline(data=surv, aes(xintercept=grp.mean, color=Treatment),
+                    linetype="dashed", size=0.7) 
 su3 <- su3 + labs(x = "Survival (hours)", y = "No. bees")
 su3 <- su3 + theme(legend.title = element_blank()) 
 su3 <- su3 + theme_classic()
@@ -809,7 +811,7 @@ su3
                 #figure4 to export 
                 fig4 <- ggarrange(
                   su3, su1,
-                  widths = c(3, 4), heights = c(2.5, 0.2),
+                  widths = c(3, 3), heights = c(2.5, 0.2),
                   common.legend = TRUE, legend = "bottom",
                   labels = c("A", "B"))
                 fig4
