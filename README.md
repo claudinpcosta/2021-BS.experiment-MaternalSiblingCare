@@ -8,6 +8,9 @@ We performed an experiment to determine how maternal and sibling brood care diff
 
 ### Sample Information
 
-_see [complete.xls](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/complete.xls) for all data_
+_see [complete.xls](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/complete.xls) for all data._
 
+### Analysis
+
+_see [BSexpScript.R](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/BSexpScript.R) for codes and  and we can find the input in the folder [Data](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/tree/master/Data)_
 
