@@ -12,5 +12,5 @@ _see [complete.xls](https://github.com/claudinpcosta/2020-BS.experiment-Maternal
 
 ### Analysis
 
-_see [BSexpScript.R](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/BSexpScript.R) for codes and  and we can find the input in the folder [Data](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/tree/master/Data)_
+_see [BSexpScript.R](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/BSexpScript.R) for codes and  and we can find the input in the folder [Data](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/tree/master/Data)._
 
