@@ -662,7 +662,7 @@ s1 <- s1 + theme(legend.title = element_blank())
 s1 <- s1 + theme_classic()
 s1 <- s1 + scale_color_grey()+scale_fill_grey()
 s1 <- s1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
-s1 <- s1 + theme(legend.position = "top")
+s1 <- s1 + theme(legend.position = "bottom")
 s1 <- s1 + theme(text = element_text(size = 12))
 s1
 
@@ -688,7 +688,7 @@ s4 <- s4 + labs(x = "Sucrose concentration", y = "No. bees responded")
 s4 <- s4 + theme(legend.title = element_blank()) 
 s4 <- s4 + theme_classic()
 s4 <- s4 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
-s4 <- s4 + theme(legend.position = "top")
+s4 <- s4 + theme(legend.position = "bottom")
 s4 <- s4 + theme(text = element_text(size = 12))
 s4
 
@@ -795,36 +795,19 @@ su3
                 su3 <- su3 + theme(legend.position="none")
                 su1 <- su1 + theme(legend.position="none")
                 
-                #figure2 Sucrose to export 
-                #save legends
-                legend1 <- get_legend(s1)
-                legend2 <- get_legend(s4)
-                #Remove the legend from the box plot
-                s1 <- s1 + theme(legend.position="none")
-                s4 <- s4 + theme(legend.position="none")
-                
-                fig2 <- ggarrange(s1,s4, legend1, legend2,
-                             ncol=2, nrow = 2, 
-                             widths = c(3, 3), heights = c(2.5, 0.2),
-                             labels = c("A", "B", "", ""))
-                fig2
-    
-
-                #figure3 Learning to export 
+                #figure3 to export 
                 fig3 <- ggarrange(
-                  l,l1,
+                  su3, su1,
                   widths = c(3, 3), heights = c(2.5, 0.2),
                   common.legend = TRUE, legend = "bottom",
                   labels = c("A", "B"))
                 fig3
                 
-
-                #figure4 to export 
-                fig4 <- ggarrange(
-                  su3, su1,
+                #figure SI Learning to export 
+                figSI <- ggarrange(
+                  l,l1,
                   widths = c(3, 3), heights = c(2.5, 0.2),
                   common.legend = TRUE, legend = "bottom",
                   labels = c("A", "B"))
-                fig4
+                figSI
                 
-               
