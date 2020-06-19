@@ -294,7 +294,7 @@ lrtest(BSnull, BS2)
 
   #testing differences in BS between treatments
 
-#body size vs rearing history 
+#body size vs Care-giver identity 
 wilcox.test(Avg.mm~Treatment, data=bodytime)
 
 #test of homogeneity of variances
@@ -327,7 +327,7 @@ anova(DTnull, DT1)
 
   #testing differences in Development Time between treatments
 
-#developmental time vs rearing history 
+#developmental time vs Care-giver identity 
 wilcox.test(bodytime$Time.development.days~bodytime$Treatment)
 
 #test of homogeneity of variances
@@ -541,7 +541,8 @@ h <- h + geom_vline(data=mu, aes(xintercept=grp.mean, color=Treatment),
 h <- h + xlab("Marginal cell length (mm)")+ylab("No. bees")
 h <- h + theme(legend.position = "right") + theme(legend.title = element_blank())
 h <- h + theme_classic()
-h <- h + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+h <- h + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+h <- h + theme(text = element_text(size = 12)) 
 h
 
 h1 <-ggplot(bodytime, aes(x=Avg.mm, fill=Treatment, color=Treatment)) +
@@ -551,7 +552,8 @@ h1 <- h1 + geom_vline(data=bs, aes(xintercept=grp.mean, color=Treatment),
 h1 <- h1 + xlab("Marginal cell length (mm)")+ylab("No. bees")
 h1 <- h1 + theme(legend.position = "right") + theme(legend.title = element_blank())
 h1 <- h1 + theme_classic()
-h1 <- h1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+h1 <- h1 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+h1 <- h1 + theme(text = element_text(size = 12)) 
 h1
 
 #Development time####
@@ -562,7 +564,8 @@ t <- t + geom_vline(data=dt, aes(xintercept=grp.mean, color=Treatment),
 t <- t + labs(x = "Development time (days)", y = "No. bees")
 t <- t + theme(legend.title = element_blank()) + theme(legend.position = "right")
 t <- t + theme_classic()
-t <- t + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+t <- t + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+t <- t + theme(text = element_text(size = 12)) 
 t
 
 #Nests####
@@ -574,7 +577,7 @@ ne <- ggplot(nestDevTime, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatmen
 ne <- ne + labs(x = "Nests", y = "Development Duration (days)")
 ne <- ne + theme(legend.title = element_blank()) + theme(legend.position = "right")
 ne <- ne + theme_classic()
-ne <- ne + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne <- ne + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 ne
 
 
@@ -583,8 +586,8 @@ ne2 <-ggplot(nestDevTime, aes(x=Treatment, y=mean, fill = Treatment, color = Tre
 ne2 <- ne2 + labs(x = "Treatment", y = "Development time (days)")
 ne2 <- ne2 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 ne2 <- ne2 + theme_classic()
-ne2 <- ne2 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
-ne2 <- ne2 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+ne2 <- ne2 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne2 <- ne2 + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
 ne2
 
 
@@ -596,7 +599,7 @@ ne3 <- ggplot(nestBodySize, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatm
 ne3 <- ne3 + labs(x = "Nests", y = "Marginal cell length (mm)")
 ne3 <- ne3 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 ne3 <- ne3 + theme_classic()
-ne3 <- ne3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne3 <- ne3 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 ne3
 
 
@@ -608,16 +611,17 @@ c<- ggscatter(bodytime, x = "Time.development.days", y = "Avg.mm",
           xlab = "Development time (Days)", ylab = "Marginal celll length (mm)")
 c
 
-c1 <- ggplot(bodytime, aes(x = Time.development.days, y = Avg.mm))
+c1 <- ggplot(bodytime, aes(y = Avg.mm, x = Time.development.days))
 c1 <- c1 + geom_smooth(method=lm, se=FALSE, color="black")
 c1 <- c1 + geom_jitter(aes(color = Treatment)) + 
   geom_smooth(aes(color = Treatment, fill = Treatment), linetype="dashed", method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-c1 <- c1 + labs(x = "Development time (days)", y = "Marginal cell length (mm)")
+c1 <- c1 + labs(y = "Marginal cell length (mm)", x = "Development time (days)")
 c1 <- c1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 c1 <- c1 + theme_classic()
-c1 <- c1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
-c1 
+c1 <- c1 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+c1 <- c1 + theme(text = element_text(size = 12)) 
+c1
 
 
 #Feeding####
@@ -628,7 +632,8 @@ f <- ggplot(feeding.data, aes(x=day, y=mean, group=Treatment, color=Treatment, f
 f <- f + xlab("Larval age (days)")+ylab("No. Feeding events")
 f <- f + theme(legend.position = "right") + theme(legend.title = element_blank())
 f <- f + theme_classic()
-f <- f + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+f <- f + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+f <- f + theme(text = element_text(size = 12))
 f
 
                       #figure1 to export 
@@ -647,17 +652,18 @@ s<- ggplot(sucrose, aes(x=Sucrose.summary, fill=Treatment, color=Treatment)) +
 s <- s + labs(x = "Sucrose Response", y = "No. bees")
 s <- s + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s <- s + theme_classic()
-s <- s + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s <- s + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s
 
 s1 <- ggplot(sucrose,aes(x = Treatment,fill = Sucrose.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Responded")+scale_fill_discrete(name="Responded to Sucrose")
-s1 <- s1 + labs(x = "Rearing history", fill = "Assay response")
+s1 <- s1 + labs(x = "Care-giver identity", fill = "Assay response")
 s1 <- s1 + theme(legend.title = element_blank())
 s1 <- s1 + theme_classic()
 s1 <- s1 + scale_color_grey()+scale_fill_grey()
-s1 <- s1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+s1 <- s1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
 s1 <- s1 + theme(legend.position = "top")
+s1 <- s1 + theme(text = element_text(size = 12))
 s1
 
 s2 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
@@ -665,7 +671,7 @@ s2 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
 s2 <- s2 + labs(x = "Sucrose Response (Concentration)", y = "No. bees", title = "Sucrose response (Concentration) versus Group reared")
 s2 <- s2 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s2 <- s2 + theme_classic()
-s2 <- s2 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s2 <- s2 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s2
 
 s3 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
@@ -673,7 +679,7 @@ s3 <- ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
 s3 <- s3 + labs(x = "Sucrose Response (Concentration)", title = "Sucrose response (Concentration) versus Group reared")
 s3 <- s3 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s3 <- s3 + theme_classic()
-s3 <- s3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s3 <- s3 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s3
 
 s4 <-ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
@@ -681,8 +687,9 @@ s4 <-ggplot(sucrose, aes(x=Sucrose.conc, fill=Treatment, color=Treatment)) +
 s4 <- s4 + labs(x = "Sucrose concentration", y = "No. bees responded")
 s4 <- s4 + theme(legend.title = element_blank()) 
 s4 <- s4 + theme_classic()
-s4 <- s4 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s4 <- s4 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s4 <- s4 + theme(legend.position = "top")
+s4 <- s4 + theme(text = element_text(size = 12))
 s4
 
 s5 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatment)) + 
@@ -690,7 +697,7 @@ s5 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatm
 s5 <- s5 + labs(x = "Sucrose Response (Concentration)", y = "Marginal cell length (mm)", title = "Sucrose response versus Body size")
 s5 <- s5 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s5 <- s5 + theme_classic()
-s5 <- s5 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s5 <- s5 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s5
 
 s6 <- ggplot(sucrose, aes(x=Sucrose.conc, y=Avg.mm, fill=Treatment, color=Treatment))
@@ -700,36 +707,38 @@ geom_smooth(aes(color = Treatment, fill = Treatment), method = lm) +
 s6 <- s6 + labs(x = "Sucrose Response (Concentration)", y = "Marginal cell length (mm)", title = "Sucrose response versus Body size")
 s6 <- s6 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 s6 <- s6 + theme_classic()
-s6 <- s6 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+s6 <- s6 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 s6
 
 s7 <- ggscatter(sucrose, x = "Sucrose.conc", y = "Avg.mm",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "spearman",
-          xlab = "Sucrose Response (Concentration)", ylab = "Marginal celll length (mm)")
+          xlab = "Sucrose Response (Concentration)", ylab = "Marginal cell length (mm)")
 s7
 
 #Learning####
 
 l <- ggplot(learningTraining,aes(x = Treatment,fill = LearningTraining.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Trained")
-l <- l + labs(x = "Rearing history", fill = "Assay response")
+l <- l + labs(x = "Care-giver identity", fill = "Assay response")
 l <- l + theme(legend.title = element_blank())
 l <- l + theme_classic()
 l <- l + scale_fill_brewer(palette = "Dark2") + scale_color_brewer(palette = "Dark2")
 l <- l + scale_color_grey()+scale_fill_grey()
-l <- l + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+l <- l + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
 l <- l + theme(legend.position = "top")
+l <- l + theme(text = element_text(size = 12))
 l
 
 l1 <- ggplot(learningTest,aes(x = Treatment,fill = LearningTest.summary)) + 
   geom_bar(position = "fill")+ylab("Proportion Successful")
-l1 <- l1 + labs(x = "Rearing history", fill = "Assay response")
+l1 <- l1 + labs(x = "Care-giver identity", fill = "Assay response")
 l1 <- l1 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 l1 <- l1 + theme_classic()
 l1 <- l1 + scale_color_grey()+scale_fill_grey()
-l1 <- l1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+l1 <- l1 + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
 l1 <- l1 + theme(legend.position = "top")
+l1 <- l1 + theme(text = element_text(size = 12))
 l1
 
 #Survival####
@@ -738,24 +747,25 @@ su <- ggplot(surv, aes(x=Treatment, y=grp.mean, fill = Treatment, color = Treatm
   geom_errorbar(aes(ymin=grp.mean-se, ymax=grp.mean+se),
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9))
-su <- su + labs(x = "Rearing history", y = "Hours")
+su <- su + labs(x = "Care-giver identity", y = "Hours")
 su <- su + theme(legend.title = element_blank()) + theme(legend.position = "right")
 su <- su + theme_classic()
-su <- su + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
-su <- su + scale_x_discrete(labels=c("Queen.reared" = "Queen-reared", "Worker.reared" = "Worker-reared"))
+su <- su + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+su <- su + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
 su
 
 
-su1 <- ggplot(survival, aes(x=Survival.hours, y=Avg.mm))
+su1 <- ggplot(survival, aes(x=Avg.mm, y=Survival.hours))
 su1 <- su1 + geom_smooth(method=lm, se=FALSE, color="black" )
 su1 <- su1 +  geom_jitter(aes(color = Treatment)) +
   geom_smooth(aes(color = Treatment, fill = Treatment), linetype="dashed", method = lm) +
   scale_fill_brewer(palette = "Set1") + scale_color_brewer(palette = "Set1")
-su1 <- su1 + labs(x = "Survival (hours)", y = "Marginal cell length (mm)")
+su1 <- su1 + labs(x = "Marginal cell length (mm)", y = "Survival (hours)")
 su1 <- su1 + theme(legend.title = element_blank())
 su1 <- su1 + theme_classic()
-su1 <- su1 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+su1 <- su1 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 su1 <- su1 + theme(legend.position = "top")
+su1 <- su1 + theme(text = element_text(size = 12))
 su1
 
 
@@ -773,8 +783,9 @@ su3 <- su3 + geom_vline(data=surv, aes(xintercept=grp.mean, color=Treatment),
 su3 <- su3 + labs(x = "Survival (hours)", y = "No. bees")
 su3 <- su3 + theme(legend.title = element_blank()) 
 su3 <- su3 + theme_classic()
-su3 <- su3 + scale_fill_brewer(name = "Rearing history", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Rearing history", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+su3 <- su3 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 su3 <- su3 + theme(legend.position = "top")
+su3 <- su3 + theme(text = element_text(size = 12))
 su3
 
                
@@ -816,5 +827,4 @@ su3
                   labels = c("A", "B"))
                 fig4
                 
-                
-                
+               
