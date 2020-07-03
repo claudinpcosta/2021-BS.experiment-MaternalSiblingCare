@@ -20,7 +20,7 @@ library(MuMIn)
 
 
 #### * LOADING DATASET * ####
-completeDataset <- read.csv("completeDataset.csv", header = T)
+completeDataset <- read.csv("Data/completeDataset.csv", header = T)
 
   #checking dataset
 dim(completeDataset)
@@ -155,7 +155,7 @@ suc.con <- subset(sucrose, !is.na(Sucrose.conc))
 suc.con %>%
   count(Treatment, Sucrose.conc.summary, sort = TRUE)
 
-suc.con.data <- read.csv("suc.concentration.csv", row.names = 1)
+suc.con.data <- read.csv("Data/suc.concentration.csv", row.names = 1)
 
 #Learning####
 summary(LearningTraining.summary)
@@ -249,7 +249,7 @@ nestBS
 
 #Feeding rates####
 
-feeding.rate <- read.csv("feedingRates.csv")
+feeding.rate <- read.csv("Data/feedingRates.csv")
 feeding.rate
 
 fd <- ddply(feeding.rate, c("Treatment"), summarise,
@@ -265,7 +265,7 @@ fd <- ddply(feeding.rate, c("Treatment"), summarise,
             max5d =max(Feeding.5d))
 
 
-feeding.data <- read.csv("Feeding.csv")
+feeding.data <- read.csv("Data/Feeding.csv")
 feeding.data
 
 
