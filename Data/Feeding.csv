@@ -1,0 +1,5 @@
+Treatment,day,mean,sd,se
+queen.reared,3d,3.4,1.140175,0.2765332
+queen.reared,5d,4.4,1.140175,0.2430862
+worker.reared,3d,3.4,1.516575,0.3678235
+worker.reared,5d,4.2,1.30384,0.2845213
