@@ -2,7 +2,7 @@
 
 ###Set Working Directory
 
-####all packages used here####
+#### * ALL PACKAGES USED HERE * ####
 library(plyr)
 library(ggplot2) 
 library(gridExtra)
@@ -154,8 +154,11 @@ sucrose %>%
 suc.con <- subset(sucrose, !is.na(Sucrose.conc))
 suc.con %>%
   count(Treatment, Sucrose.conc.summary, sort = TRUE)
+dim(suc.con)
+head(suc.con)
 
 suc.con.data <- read.csv("Data/suc.concentration.csv", row.names = 1)
+head(suc.con.data)
 
 #Learning####
 summary(LearningTraining.summary)
@@ -263,6 +266,7 @@ fd <- ddply(feeding.rate, c("Treatment"), summarise,
             se5d   = sd5d / sqrt(sum(Feeding.5d)),
             min5d =min(Feeding.5d),
             max5d =max(Feeding.5d))
+fd
 
 
 feeding.data <- read.csv("Data/Feeding.csv")
@@ -280,30 +284,35 @@ ggdensity(bodytime$Avg.mm)
 hist(bodytime$Avg.mm)
 
           #obs.: data doesn't come from a normal distribution: Gamma
-BSnull <- glmer(Avg.mm ~1 + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
-BS1 <- glmer(Avg.mm ~ Treatment + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
-BS2 <- glmer(Avg.mm ~ Treatment + Time.development.days + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
-BS3 <- glmer(Avg.mm ~ Treatment * Time.development.days + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
-BS4 <- glmer(Avg.mm ~ Time.development.days + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
+BSnull <- glmer(Avg.mm ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family = Gamma(link = "identity"))
+BS1 <- glmer(Avg.mm ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family= Gamma(link = "identity"))
+BS2 <- glmer(Avg.mm ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family= Gamma(link = "identity"))
+BS3 <- glmer(Avg.mm ~ Treatment * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family= Gamma(link = "identity"))
+BS4 <- glmer(Avg.mm ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family= Gamma(link = "identity"))
 
-AIC(BSnull, BS1, BS2, BS3, BS4) # choose the best fit model (lower AIC value)
+model.sel(BSnull, BS1, BS2, BS3, BS4) # choose the best fit model
 
 #for best fit model
-summary(BS2)
-lrtest(BSnull, BS2)
+summary(BS1)
+Anova(BS1)
+lrtest(BSnull, BS1)
+summary(glht(BS1, linfct=mcp(Treatment="Tukey")))
 
-  #testing differences in BS between treatments
-
-#body size vs Care-giver identity 
-wilcox.test(Avg.mm~Treatment, data=bodytime)
-
-#test of homogeneity of variances
-  #treatment
-leveneTest(Avg.mm~Treatment, data=bodytime)
-
-  #nest
-leveBSvsNest <- bodytime[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT042" ),]
-leveneTest(leveBSvsNest$Avg.mm~leveBSvsNest$QueenID)
+#   #testing differences in BS between treatments
+# 
+# #body size vs Care-giver identity 
+# wilcox.test(Avg.mm~Treatment, data=bodytime)
+# 
+# #body size vs Care-giver identity (using mean)
+# wilcox.test(mean~Treatment, data=nestBodySize)
+# 
+# #test of homogeneity of variances
+#   #treatment
+# leveneTest(Avg.mm~Treatment, data=bodytime)
+# 
+#   #nest
+# leveBSvsNest <- bodytime[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT042" ),]
+# leveneTest(leveBSvsNest$Avg.mm~leveBSvsNest$QueenID)
 
 
 #Development time stats####
@@ -315,38 +324,32 @@ hist(bodytime$Time.development.days)
 
           #obs.: data doesn't come from a normal distribution: Gamma
 
-DTnull <- glmer(Time.development.days ~1 + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
-DT1 <- glmer(Time.development.days ~ Treatment + (1 | ColonyID_queen), data=bodytime, family=Gamma(link = "inverse"))
+DTnull <- glmer(Time.development.days ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family=Gamma(link = "identity"))
+DT1 <- glmer(Time.development.days ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=bodytime, family=Gamma(link = "identity"))
 
-AIC(DTnull, DT1) # choose the best fit model (lower AIC value)
-
-#for best fit model
-summary(DT1)
-anova(DTnull, DT1)
+model.sel(DTnull, DT1) # choose the best fit model
 
 
   #testing differences in Development Time between treatments
 
-#developmental time vs Care-giver identity 
-wilcox.test(bodytime$Time.development.days~bodytime$Treatment)
-
-#test of homogeneity of variances
-  #treatment
-leveneTest(bodytime$Time.development.day~bodytime$Treatment)
-
-  #nest
-leveDTvsNest <- bodytime[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT042" ),]
-leveneTest(leveDTvsNest$Time.development.day~leveDTvsNest$QueenID)
+# #developmental time vs Care-giver identity 
+# wilcox.test(bodytime$Time.development.days~bodytime$Treatment)
+# 
+# #developmental time vs Care-giver identity
+# wilcox.test(mean~Treatment, data=nestDevTime)
+# 
+# #test of homogeneity of variances
+#   #treatment
+# leveneTest(bodytime$Time.development.day~bodytime$Treatment)
+# 
+#   #nest
+# leveDTvsNest <- bodytime[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID == "MT042" ),]
+# leveneTest(leveDTvsNest$Time.development.day~leveDTvsNest$QueenID)
 
 
 #Correlation BS vs Development time####
 cor.test(bodytime$Avg.mm, bodytime$Time.development.days, data=bodytime, method="spearman")
 
-
-#Survival####
-
-#testing differences in Survival between treatments
-wilcox.test(survival$Survival.hours ~ survival$Treatment)
 
 #Correlation Survival vs BS####
 cor.test(survival$Survival.hours, survival$Avg.mm, method="spearman")
@@ -359,38 +362,46 @@ leveSvsNest <- survival[-which(QueenID == "MT035" | QueenID == "MT039" | QueenID
 leveneTest(leveSvsNest$Avg.mm~leveSvsNest$QueenID)
 
 
+#Survival####
+
+# #testing differences in Survival between treatments
+# wilcox.test(survival$Survival.hours ~ survival$Treatment)
+
   #testing whether a random sample of data comes from a normal distribution
 shapiro.test(survival$Survival.hours)
 ggdensity(survival$Survival.hours)
 hist(survival$Survival.hours)
 
           #obs.: data doesn't come from a normal distribution: Poisson 
-Snull <- glmer(Survival.hours ~1 + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S1 <- glmer(Survival.hours ~ Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S2 <- glmer(Survival.hours ~ Avg.mm + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S3 <- glmer(Survival.hours ~ Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S4 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S5 <- glmer(Survival.hours ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S6 <- glmer(Survival.hours ~ Treatment + Avg.mm + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S7 <- glmer(Survival.hours ~ Treatment + Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S8 <- glmer(Survival.hours ~ Avg.mm + Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S9 <- glmer(Survival.hours ~ Avg.mm * Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S10 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S11 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S12 <- glmer(Survival.hours ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S13 <- glmer(Survival.hours ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S14 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S15 <- glmer(Survival.hours ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S16 <- glmer(Survival.hours ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S17 <- glmer(Survival.hours ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S18 <- glmer(Survival.hours ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
-S19 <- glmer(Survival.hours ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=survival, family=poisson(link="log"))
+Snull <- glmer(Survival.hours ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S1 <- glmer(Survival.hours ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S2 <- glmer(Survival.hours ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S3 <- glmer(Survival.hours ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, Gamma(link="log"))
+S4 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S5 <- glmer(Survival.hours ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S6 <- glmer(Survival.hours ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S7 <- glmer(Survival.hours ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S8 <- glmer(Survival.hours ~ Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S9 <- glmer(Survival.hours ~ Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S10 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S11 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S12 <- glmer(Survival.hours ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S13 <- glmer(Survival.hours ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S14 <- glmer(Survival.hours ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S15 <- glmer(Survival.hours ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S16 <- glmer(Survival.hours ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S17 <- glmer(Survival.hours ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S18 <- glmer(Survival.hours ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
+S19 <- glmer(Survival.hours ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=survival, family=Gamma(link="log"))
 
-AIC(Snull, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19) # choose the best fit model (lower AIC value)
+model.sel(Snull, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19) # choose the best fit model
 
 #for best fit model
 summary(S6)
-anova(Snull, S6)
+Anova(S6)
+lrtest(Snull,S6)
+summary(glht(S6, linfct=mcp(Treatment="Tukey")))
+
 
 #Learning stats####
 
@@ -398,89 +409,92 @@ anova(Snull, S6)
           #obs.: data is binomial (yes - 1 or no - 0): binomal
 
 #LearningTraining
-LTRnull <- glmer(LearningTraining ~1 + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR1 <- glmer(LearningTraining ~ Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR2 <- glmer(LearningTraining ~ Avg.mm + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR3 <- glmer(LearningTraining ~ Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR4 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR5 <- glmer(LearningTraining ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR6 <- glmer(LearningTraining ~ Treatment + Avg.mm + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR7 <- glmer(LearningTraining ~ Treatment + Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR8 <- glmer(LearningTraining ~ Avg.mm + Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR9 <- glmer(LearningTraining ~ Avg.mm * Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR10 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR11 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR12 <- glmer(LearningTraining ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR13 <- glmer(LearningTraining ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR14 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR15 <- glmer(LearningTraining ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR16 <- glmer(LearningTraining ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR17 <- glmer(LearningTraining ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR18 <- glmer(LearningTraining ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
-LTR19 <- glmer(LearningTraining ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTraining, family=binomial(link = "logit"))
+LTRnull <- glmer(LearningTraining ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR1 <- glmer(LearningTraining ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR2 <- glmer(LearningTraining ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR3 <- glmer(LearningTraining ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR4 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR5 <- glmer(LearningTraining ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR6 <- glmer(LearningTraining ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR7 <- glmer(LearningTraining ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR8 <- glmer(LearningTraining ~ Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR9 <- glmer(LearningTraining ~ Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR10 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR11 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR12 <- glmer(LearningTraining ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR13 <- glmer(LearningTraining ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR14 <- glmer(LearningTraining ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR15 <- glmer(LearningTraining ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR16 <- glmer(LearningTraining ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR17 <- glmer(LearningTraining ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR18 <- glmer(LearningTraining ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
+LTR19 <- glmer(LearningTraining ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTraining, family=binomial(link = "logit"))
 
-
-AIC(LTRnull, LTR1, LTR2, LTR3, LTR4, LTR5, LTR6, LTR7, LTR8, LTR9, LTR10, LTR11, LTR12, LTR13, LTR14, LTR15, LTR16, LTR17, LTR18, LTR19) # choose the best fit model (lower AIC value)
+model.sel(LTRnull, LTR1, LTR2, LTR3, LTR4, LTR5, LTR6, LTR7, LTR8, LTR9, LTR10, LTR11, LTR12, LTR13, LTR14, LTR15, LTR16, LTR17, LTR18, LTR19) # choose the best fit model
 
 #for best fit model
 summary(LTR2)
-anova(LTRnull, LTR2)
+Anova(LTR2)
+lrtest(LTRnull, LTR2)
+
 
 
 #LearningTesting
-LTnull <- glmer(LearningTest ~1 + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT1 <- glmer(LearningTest ~ Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT2 <- glmer(LearningTest ~ Avg.mm + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT3 <- glmer(LearningTest ~ Time.development.days + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT4 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT5 <- glmer(LearningTest ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT6 <- glmer(LearningTest ~ Treatment + Avg.mm + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT7 <- glmer(LearningTest ~ Treatment + Time.development.days + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT8 <- glmer(LearningTest ~ Avg.mm + Time.development.days + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT9 <- glmer(LearningTest ~ Avg.mm * Time.development.days + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT10 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT11 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=learningTest, family=binomial(link = "logit"))
-LT12 <- glmer(LearningTest ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT13 <- glmer(LearningTest ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT14 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT15 <- glmer(LearningTest ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT16 <- glmer(LearningTest ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT17 <- glmer(LearningTest ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT18 <- glmer(LearningTest ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
-LT19 <- glmer(LearningTest ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) , data=learningTest, family=binomial(link = "logit"))
+LTnull <- glmer(LearningTest ~1 + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT1 <- glmer(LearningTest ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT2 <- glmer(LearningTest ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT3 <- glmer(LearningTest ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT4 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT5 <- glmer(LearningTest ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT6 <- glmer(LearningTest ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT7 <- glmer(LearningTest ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT8 <- glmer(LearningTest ~ Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT9 <- glmer(LearningTest ~ Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT10 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT11 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=learningTest, family=binomial(link = "logit"))
+LT12 <- glmer(LearningTest ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT13 <- glmer(LearningTest ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT14 <- glmer(LearningTest ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT15 <- glmer(LearningTest ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT16 <- glmer(LearningTest ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT17 <- glmer(LearningTest ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT18 <- glmer(LearningTest ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
+LT19 <- glmer(LearningTest ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
 
-AIC(LTnull, LT1, LT2, LT3, LT4, LT5, LT6, LT7, LT8, LT9, LT10, LT11, LT12, LT13, LT14, LT15, LT16, LT17, LT18, LT19) # choose the best fit model (lower AIC value)
+model.sel(LTnull, LT1, LT2, LT3, LT4, LT5, LT6, LT7, LT8, LT9, LT10, LT11, LT12, LT13, LT14, LT15, LT16, LT17, LT18, LT19) # choose the best fit model
+
 
 #Sucrose####
 
           #obs.: we have data is binomial (yes - 1 or no - 0): binomal
 
-SUnull <- glmer(Sucrose.response ~1 + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU1 <- glmer(Sucrose.response ~ Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU2 <- glmer(Sucrose.response ~ Avg.mm + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU3 <- glmer(Sucrose.response ~ Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU4 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU5 <- glmer(Sucrose.response ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU6 <- glmer(Sucrose.response ~ Treatment + Avg.mm + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU7 <- glmer(Sucrose.response ~ Treatment + Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU8 <- glmer(Sucrose.response ~ Avg.mm + Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU9 <- glmer(Sucrose.response ~ Avg.mm * Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU10 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU11 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU12 <- glmer(Sucrose.response ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU13 <- glmer(Sucrose.response ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU14 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU15 <- glmer(Sucrose.response ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU16 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU17 <- glmer(Sucrose.response ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU18 <- glmer(Sucrose.response ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
-SU19 <- glmer(Sucrose.response ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=sucrose, family=binomial(link = "logit"))
+SUnull <- glmer(Sucrose.response ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU1 <- glmer(Sucrose.response ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU2 <- glmer(Sucrose.response ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU3 <- glmer(Sucrose.response ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU4 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU5 <- glmer(Sucrose.response ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU6 <- glmer(Sucrose.response ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU7 <- glmer(Sucrose.response ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU8 <- glmer(Sucrose.response ~ Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU9 <- glmer(Sucrose.response ~ Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU10 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU11 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU12 <- glmer(Sucrose.response ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU13 <- glmer(Sucrose.response ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU14 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU15 <- glmer(Sucrose.response ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU16 <- glmer(Sucrose.response ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU17 <- glmer(Sucrose.response ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU18 <- glmer(Sucrose.response ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
+SU19 <- glmer(Sucrose.response ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=sucrose, family=binomial(link = "logit"))
 
-AIC(SUnull, SU1, SU2, SU3, SU4, SU5, SU6, SU7, SU8, SU9, SU10, SU11, SU12, SU13, SU14, SU15, SU16, SU17, SU18, SU19) # choose the best fit model (lower AIC value)
+model.sel(SUnull, SU1, SU2, SU3, SU4, SU5, SU6, SU7, SU8, SU9, SU10, SU11, SU12, SU13, SU14, SU15, SU16, SU17, SU18, SU19) # choose the best fit model
 
 #for best fit model
-summary(SU9)
-anova(SUnull, SU9)
+summary(SU3)
+Anova(SU3)
+lrtest(SUnull, SU3)
 
 
 #Sucrose.concentration
@@ -495,40 +509,43 @@ hist(suc.con$Sucrose.conc)
 
 suc.con$Sucrose.conc <- suc.con$Sucrose.conc * 100 #The Poisson model is about counts. Count values are positive natural numbers including zero (0, 1, 2, 3, ...)
 
-SCnull <- glmer(Sucrose.conc ~1 + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC1 <- glmer(Sucrose.conc ~ Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC2 <- glmer(Sucrose.conc ~ Avg.mm + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC3 <- glmer(Sucrose.conc ~ Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC4 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC5 <- glmer(Sucrose.conc ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC6 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC7 <- glmer(Sucrose.conc ~ Treatment + Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC8 <- glmer(Sucrose.conc ~ Avg.mm + Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC9 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC10 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC11 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC12 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC13 <- glmer(Sucrose.conc ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC14 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC15 <- glmer(Sucrose.conc ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC16 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC17 <- glmer(Sucrose.conc ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC18 <- glmer(Sucrose.conc ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
-SC19 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen), data=suc.con, family=poisson(link="log"))
+SCnull <- glmer(Sucrose.conc ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC1 <- glmer(Sucrose.conc ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC2 <- glmer(Sucrose.conc ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC3 <- glmer(Sucrose.conc ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC4 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC5 <- glmer(Sucrose.conc ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC6 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC7 <- glmer(Sucrose.conc ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SC8 <- glmer(Sucrose.conc ~ Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC9 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC10 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC11 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC12 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC13 <- glmer(Sucrose.conc ~ Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC14 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC15 <- glmer(Sucrose.conc ~ Treatment + Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC16 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC17 <- glmer(Sucrose.conc ~ Treatment + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC18 <- glmer(Sucrose.conc ~ Avg.mm + Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC19 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days + Avg.mm * Time.development.days * Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
 
-AIC(SCnull, SC1, SC2, SC3, SC4, SC5, SC6, SC7, SC8, SC9, SC10, SC11, SC12, SC13, SC14, SC15, SC16, SC17, SC18, SC19) # choose the best fit model (lower AIC value)
-
-#for best fit model
-summary(SC1)
-anova(SCnull, SC1)
-
+model.sel(SCnull, SC1, SC2, SC3, SC4, SC5, SC6, SC7, SC8, SC9, SC10, SC11, SC12, SC13, SC14, SC15, SC16, SC17, SC18, SC19) # choose the best fit model
 
 
 #Feeding####
+shapiro.test(feeding.rate$Feeding.3d)
+shapiro.test(feeding.rate$Feeding.5d)
 
-wilcox.test(Feeding.3d~Treatment, data=feeding.rate)
+res.3d <- aov(Feeding.3d~Treatment, data=feeding.rate)
+summary(res.3d)
+cor.test(feeding.rate$Feeding.3d, feeding.rate$N.larvae, method="spearman")
 
-wilcox.test(Feeding.5d~Treatment, data=feeding.rate)
+
+res.5d <- aov(Feeding.5d~Treatment, data=feeding.rate)
+summary(res.5d)
+cor.test(feeding.rate$Feeding.5d, feeding.rate$N.larvae, method="spearman")
+
 
 
 #### * GRAPHICS * ####
@@ -636,9 +653,21 @@ f <- f + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks
 f <- f + theme(text = element_text(size = 12))
 f
 
-                      #figure1 to export 
+
+f1 <- ggplot(feeding.rate, aes(y = N.larvae, x = Feeding.3d))
+f1 <- f1 + geom_smooth(method=lm, se=FALSE, color="black", linetype="dashed")
+f1 <- f1 + geom_jitter(aes(color = Treatment))
+f1 <- f1 + labs(y = "No. Bees from First Brood", x = "No. Feeding events")
+f1 <- f1 + theme(legend.position = "bottom")
+f1 <- f1 + theme_classic()
+f1 <- f1 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+f1 <- f1 + theme(text = element_text(size = 12)) 
+f1
+
+
+                      #figure1 to export#### 
                       fig1 <- ggarrange(
-                        h,t,c1,f, ncol = 2, nrow =  2,
+                        h1,t,c1,f, ncol = 2, nrow =  2,
                         labels = c("A", "B", "C", "D"),
                         common.legend = TRUE, legend = "bottom",
                         widths = c(3, 3)
@@ -789,13 +818,13 @@ su3 <- su3 + theme(text = element_text(size = 12))
 su3
 
                
-               
+                #figure3 to export####
                 l <- l + theme(legend.position="none")
                 l1 <- l1 + theme(legend.position="none")
                 su3 <- su3 + theme(legend.position="none")
                 su1 <- su1 + theme(legend.position="none")
                 
-                #figure3 to export 
+               
                 fig3 <- ggarrange(
                   su3, su1,
                   widths = c(3, 3), heights = c(2.5, 0.2),
@@ -803,7 +832,7 @@ su3
                   labels = c("A", "B"))
                 fig3
                 
-                #figure SI Learning to export 
+                #figure SI Learning to export####
                 figSI <- ggarrange(
                   l,l1,
                   widths = c(3, 3), heights = c(2.5, 0.2),
