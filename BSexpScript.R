@@ -306,7 +306,7 @@ summary(glht(BS1, linfct=mcp(Treatment="Tukey")))
 # #body size vs Care-giver identity (using mean)
 # wilcox.test(mean~Treatment, data=nestBodySize)
 # 
-# #test of homogeneity of variances
+#test of homogeneity of variances
 #   #treatment
 # leveneTest(Avg.mm~Treatment, data=bodytime)
 # 
@@ -437,8 +437,6 @@ summary(LTR2)
 Anova(LTR2)
 lrtest(LTRnull, LTR2)
 
-
-
 #LearningTesting
 LTnull <- glmer(LearningTest ~1 + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
 LT1 <- glmer(LearningTest ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID) , data=learningTest, family=binomial(link = "logit"))
@@ -505,18 +503,16 @@ shapiro.test(suc.con$Sucrose.conc)
 ggdensity(suc.con$Sucrose.conc)
 hist(suc.con$Sucrose.conc)
 
-          #obs.: data doesn't come from a normal distribution:  poisson
+suc.con$Sucrose.conc <- suc.con$Sucrose.conc * 100 
 
-suc.con$Sucrose.conc <- suc.con$Sucrose.conc * 100 #The Poisson model is about counts. Count values are positive natural numbers including zero (0, 1, 2, 3, ...)
-
-SCnull <- glmer(Sucrose.conc ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC1 <- glmer(Sucrose.conc ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC2 <- glmer(Sucrose.conc ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC3 <- glmer(Sucrose.conc ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC4 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC5 <- glmer(Sucrose.conc ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC6 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
-SC7 <- glmer(Sucrose.conc ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="inverse"))
+SCnull <- glmer(Sucrose.conc ~1 + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC1 <- glmer(Sucrose.conc ~ Treatment + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC2 <- glmer(Sucrose.conc ~ Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC3 <- glmer(Sucrose.conc ~ Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC4 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC5 <- glmer(Sucrose.conc ~ Treatment + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC6 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
+SC7 <- glmer(Sucrose.conc ~ Treatment + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
 SC8 <- glmer(Sucrose.conc ~ Avg.mm + Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
 SC9 <- glmer(Sucrose.conc ~ Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
 SC10 <- glmer(Sucrose.conc ~ Treatment + Avg.mm + Time.development.days + Avg.mm * Time.development.days + (1 | ColonyID_queen) + (1 | QueenID), data=suc.con, family=Gamma(link="log"))
@@ -592,19 +588,19 @@ ne <- ggplot(nestDevTime, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatmen
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9))
 ne <- ne + labs(x = "Nests", y = "Development Duration (days)")
-ne <- ne + theme(legend.title = element_blank()) + theme(legend.position = "right")
 ne <- ne + theme_classic()
 ne <- ne + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne <- ne + theme(legend.title = element_blank()) + theme(legend.position = "bottom")
 ne
 
 
 ne2 <-ggplot(nestDevTime, aes(x=Treatment, y=mean, fill = Treatment, color = Treatment)) +
   geom_boxplot(alpha = 0.5)
 ne2 <- ne2 + labs(x = "Treatment", y = "Development time (days)")
-ne2 <- ne2 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 ne2 <- ne2 + theme_classic()
 ne2 <- ne2 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
 ne2 <- ne2 + scale_x_discrete(labels=c("Queen.reared" = "Queen-Reared", "Worker.reared" = "Worker-Reared"))
+ne2 <- ne2 + theme(legend.title = element_blank()) + theme(legend.position = "bottom")
 ne2
 
 
@@ -614,9 +610,9 @@ ne3 <- ggplot(nestBodySize, aes(x=reorder(QueenID, -mean), y=mean, fill = Treatm
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9))
 ne3 <- ne3 + labs(x = "Nests", y = "Marginal cell length (mm)")
-ne3 <- ne3 + theme(legend.title = element_blank()) + theme(legend.position = "right")
 ne3 <- ne3 + theme_classic()
 ne3 <- ne3 + scale_fill_brewer(name = "Care-giver identity", palette = "Set1",breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared")) + scale_color_brewer(name = "Care-giver identity", breaks=c("Queen.reared", "Worker.reared"),labels=c("Queen-Reared", "Worker-Reared"),palette = "Set1")
+ne3 <- ne3 + theme(legend.title = element_blank()) + theme(legend.position = "bottom")
 ne3
 
 
@@ -818,25 +814,35 @@ su3 <- su3 + theme(text = element_text(size = 12))
 su3
 
                
-                #figure3 to export####
+                #figure2 to export####
                 l <- l + theme(legend.position="none")
                 l1 <- l1 + theme(legend.position="none")
                 su3 <- su3 + theme(legend.position="none")
                 su1 <- su1 + theme(legend.position="none")
                 
                
-                fig3 <- ggarrange(
+                fig2 <- ggarrange(
                   su3, su1,
                   widths = c(3, 3), heights = c(2.5, 0.2),
                   common.legend = TRUE, legend = "bottom",
                   labels = c("A", "B"))
-                fig3
+                fig2
                 
-                #figure SI Learning to export####
-                figSI <- ggarrange(
+                #figure SI1 Sucrose to export####
+                figSI1 <- ggarrange(
+                  s1,s4,
+                  widths = c(3, 3), heights = c(2.5, 0.2),
+                  common.legend = TRUE, legend = "bottom",
+                  labels = c("A", "B"))
+                figSI1
+                
+                #figure SI2 Learning to export####
+                figSI2 <- ggarrange(
                   l,l1,
                   widths = c(3, 3), heights = c(2.5, 0.2),
                   common.legend = TRUE, legend = "bottom",
                   labels = c("A", "B"))
-                figSI
+                figSI2
                 
+                
+               
