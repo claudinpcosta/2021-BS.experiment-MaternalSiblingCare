@@ -8,7 +8,7 @@ We performed an experiment to determine how maternal and sibling brood care diff
 
 ### Sample Information
 
-_see [complete.xls](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/complete.xls) for all data._
+_see [complete.xlsx](https://github.com/claudinpcosta/2020-BS.experiment-MaternalSiblingCare/blob/master/complete.xlsx) for all data._
 
 ### Analysis
 
