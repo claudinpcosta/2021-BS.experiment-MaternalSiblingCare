@@ -1,6 +1,6 @@
 # 2021-BS.experiment-MaternalSiblingCare
 
-## Contains all analyses performed on datasets for brood care manipulation in bumble bee queens [(Costa et al. 2021)https://bmcecolevol.biomedcentral.com/articles/10.1186/s12862-021-01756-2]
+## Contains all analyses performed on datasets for brood care manipulation in bumble bee queens [(Costa et al. 2021)]https://bmcecolevol.biomedcentral.com/articles/10.1186/s12862-021-01756-2
 
 ### Synopsis
 
