@@ -4,7 +4,7 @@
 
 ### Synopsis
 
-We performed an experiment to determine how maternal and sibling brood care differentially impact the developmental fate of workers in the bumble bee *Bombus impatiens*, using the maternal manipulation hypothesis as a guiding framework.
+We examined the body sizes of bumble bees in a large, recently burned forest-meadow complex, specifically in the Southern Sierra Nevada Mountains, with the goal of understanding whether and how habitat type mediates the impact of fire on bee size, whether the habitat type in which it occurs (forest versus meadow)… We detected evidence that bees are larger in recently burned areas, irrespective of habitat type.
 
 ### Sample Information
 
